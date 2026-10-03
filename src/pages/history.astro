@@ -1,0 +1,162 @@
+---
+// ============================================================
+//  历史版本（路径 /history）
+//
+//  这个页面把「有哪些版本、每个版本有哪些文件」列出来，
+//  省得用户去 GitHub 的 Releases 页面等着加载。
+//  但下载链接仍然指向 GitHub —— 安装包不占自己仓库的空间。
+//
+//  ★ 要改：版本列表不在这里，在 src/data/site.ts 的 releases 数组里。
+//    这个文件只负责把它渲染出来，加版本不用动这里。
+//
+//  入口：下载页「立即下载」按钮旁边的「历史版本」按钮会跳到这里。
+// ============================================================
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { site, links, releases, releaseDownloadUrl } from '../data/site';
+---
+
+<BaseLayout title="历史版本" description={`${site.title} 的全部历史版本下载。`}>
+	<section class="section">
+		<div class="container">
+			<h1 class="section-title">历史版本</h1>
+			<p class="section-subtitle">
+				共 {releases.length} 个已发布版本。旧版本仅作留存，不再继续维护。
+			</p>
+
+			<div class="release-list">
+				{
+					releases.map((r) => (
+						<article class="release-row">
+							<div class="release-info">
+								<div class="release-line">
+									<span class="release-version">v{r.version}</span>
+									<span class="badge">{r.stage}</span>
+									{/* 版本号和 site.version 一致时，标一个「当前最新」 */}
+									{r.version === site.version && (
+										<span class="badge badge-brand">当前最新</span>
+									)}
+								</div>
+								<div class="text-faint release-meta">
+									{r.date} · {r.note}
+								</div>
+							</div>
+
+							<div class="release-assets">
+								{r.assets.length > 0 ? (
+									r.assets.map((a) => (
+										<a
+											class="btn btn-outline btn-sm"
+											href={releaseDownloadUrl(r.tag, a.file)}
+											target="_blank"
+											rel="noopener"
+											title={`下载 ${a.file}`}
+										>
+											{a.label} · {a.size}
+										</a>
+									))
+								) : (
+									<span class="text-faint">暂未发布</span>
+								)}
+							</div>
+						</article>
+					))
+				}
+			</div>
+
+			<div class="release-notes">
+				<p class="text-muted">
+					<strong>安装版</strong>是带安装向导的 Setup 程序；
+					<b>免安装包</b>是压缩包，解压后直接运行主程序即可。
+					两者功能完全一致，按习惯选一个就行。
+				</p>
+				<p class="text-faint">
+					所有下载均指向 GitHub Releases。
+					找不到想要的版本，可以<a href={links.releases} target="_blank" rel="noopener">前往 GitHub 查看全部</a>。
+				</p>
+				<p>
+					<a class="btn btn-primary btn-sm" href="/download">返回下载页</a>
+					<a class="btn btn-outline btn-sm" href="/changelog">查看更新日志</a>
+				</p>
+			</div>
+		</div>
+	</section>
+</BaseLayout>
+
+<style>
+	.release-list {
+		display: grid;
+		gap: 12px;
+		max-width: 860px;
+		margin: 0 auto;
+	}
+
+	.release-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		flex-wrap: wrap;
+		gap: 14px;
+		padding: 20px 24px;
+		background: var(--card);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-lg);
+		transition: border-color 0.15s, box-shadow 0.15s;
+	}
+
+	.release-row:hover {
+		border-color: var(--border-strong);
+		box-shadow: var(--shadow);
+	}
+
+	.release-line {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 10px;
+		margin-bottom: 5px;
+	}
+
+	.release-version {
+		font-family: var(--font-mono);
+		font-size: 1.08rem;
+		font-weight: 600;
+	}
+
+	.release-meta {
+		font-size: 0.88rem;
+	}
+
+	.release-assets {
+		display: flex;
+		gap: 8px;
+		flex-wrap: wrap;
+	}
+
+	.release-notes {
+		max-width: 860px;
+		margin: 44px auto 0;
+		padding-top: 26px;
+		border-top: 1px solid var(--border);
+	}
+
+	.release-notes .btn {
+		margin-right: 8px;
+	}
+
+	/* 窄屏：版本信息和下载按钮上下排 */
+	@media (max-width: 600px) {
+		.release-row {
+			flex-direction: column;
+			align-items: flex-start;
+		}
+
+		.release-assets {
+			width: 100%;
+		}
+
+		.release-assets .btn {
+			flex: 1;
+		}
+	}
+</style>

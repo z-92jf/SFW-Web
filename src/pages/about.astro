@@ -1,0 +1,208 @@
+---
+// ============================================================
+//  关于我们（路径 /about）
+//
+//  ★ 要改：团队成员、联系方式 → 直接改下面的文字，
+//    邮箱统一在 src/data/site.ts 的 contact 里改，两边保持一致。
+//
+//  ⚠ 注意：下面成员名字请你自己核对一遍再上线。
+// ============================================================
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { site, links, contact, footer } from '../data/site';
+---
+
+<BaseLayout title="关于我们" description="SERVICES FOR Windows 的开发团队与联系方式。">
+	<section class="section">
+		<div class="container">
+			<h1 class="section-title">关于我们</h1>
+			<p class="section-subtitle">加法工作室</p>
+
+			<!-- ============================================================
+			     理念
+			     ============================================================ -->
+			<div class="quote-block">
+				<p class="quote-text">在开发的过程中，不能只有加法，还有减法。</p>
+			</div>
+
+			<!-- ============================================================
+			     我们是谁
+			     ============================================================ -->
+			<div class="block">
+				<h2>我们在做什么</h2>
+				<p>
+					{site.title} 是一个面向 Windows 系统的综合工具。我们把平时用得着、
+					但系统里散落在各处的功能收拢到一个控制台里，
+					让「找某个设置」这件事从翻半天开始菜单，变成敲一个数字。
+				</p>
+				<p>
+					项目从 {footer.since} 年开始持续维护，目前版本为
+					<span class="badge badge-brand">v{site.version}</span>。
+					我们更看重的是<b>稳定</b>和<b>一致</b>——
+					界面上写什么键，按下就该是什么效果；该保存的数据，换个方式打开也还在。
+				</p>
+			</div>
+
+			<!-- ============================================================
+			     团队成员
+			     ★ 要改：核对成员名单，不需要的一行直接删掉
+			     ============================================================ -->
+			<div class="block">
+				<h2>团队成员</h2>
+				<div class="member-list">
+					<div class="member">
+						<div class="member-avatar">张</div>
+						<div>
+							<div class="member-name">张涵钦</div>
+							<div class="text-faint">z_92jf</div>
+						</div>
+					</div>
+					<div class="member">
+						<div class="member-avatar">陈</div>
+						<div>
+							<div class="member-name">陈梓木</div>
+							<div class="text-faint">开发成员</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- ============================================================
+			     联系方式
+			     ============================================================ -->
+			<div class="block">
+				<h2>联系我们</h2>
+				<ul class="contact-list">
+					{
+						contact.join && (
+							<li>
+								<span class="contact-label">想加入我们</span>
+								<a href={`mailto:${contact.join}`}>{contact.join}</a>
+							</li>
+						)
+					}
+					{
+						contact.report && (
+							<li>
+								<span class="contact-label">想投诉</span>
+								<a href={`mailto:${contact.report}`}>{contact.report}</a>
+							</li>
+						)
+					}
+					{
+						contact.comment && (
+							<li>
+								<span class="contact-label">想发布评论</span>
+								<a href={`mailto:${contact.comment}`}>{contact.comment}</a>
+							</li>
+						)
+					}
+				</ul>
+
+				<p class="mt-2">
+					<a class="btn btn-outline btn-sm" href={links.github} target="_blank" rel="noopener">
+						在 GitHub 上查看项目
+					</a>
+				</p>
+			</div>
+
+			<!-- ============================================================
+			     致谢 / 声明
+			     ★ 要改：如有需要可补充开源致谢、免责声明
+			     ============================================================ -->
+			<div class="block">
+				<h2>声明</h2>
+				<p class="text-muted">
+					本软件按「现状」提供，请在使用前阅读随附的许可证条款。
+					程序中调用的部分系统功能由操作系统提供，其行为以系统实际表现为准。
+				</p>
+			</div>
+		</div>
+	</section>
+</BaseLayout>
+
+<style>
+	.quote-block {
+		max-width: 720px;
+		margin: 0 auto 64px;
+		padding: 32px 36px;
+		background: var(--bg-soft);
+		border-left: 3px solid var(--brand);
+		border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+		text-align: center;
+	}
+
+	.quote-text {
+		margin: 0;
+		font-size: 1.2rem;
+		color: var(--text);
+	}
+
+	.block {
+		max-width: 720px;
+		margin: 0 auto 52px;
+	}
+
+	.block h2 {
+		font-size: 1.3rem;
+		padding-bottom: 10px;
+		border-bottom: 1px solid var(--border);
+	}
+
+	.block p {
+		color: var(--text-muted);
+	}
+
+	/* ---- 成员 ---- */
+	.member-list {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+		gap: 16px;
+	}
+
+	.member {
+		display: flex;
+		align-items: center;
+		gap: 14px;
+		padding: 18px 20px;
+		background: var(--card);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-lg);
+	}
+
+	.member-avatar {
+		display: grid;
+		place-items: center;
+		width: 44px;
+		height: 44px;
+		border-radius: 50%;
+		background: color-mix(in srgb, var(--brand) 12%, transparent);
+		color: var(--brand);
+		font-weight: 600;
+		flex-shrink: 0;
+	}
+
+	.member-name {
+		font-weight: 600;
+	}
+
+	/* ---- 联系方式 ---- */
+	.contact-list {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	.contact-list li {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 10px;
+		padding: 13px 0;
+		border-bottom: 1px solid var(--border);
+	}
+
+	.contact-label {
+		min-width: 110px;
+		color: var(--text-muted);
+	}
+</style>

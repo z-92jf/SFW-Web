@@ -1,0 +1,455 @@
+/* ============================================================
+   全站样式表
+   配色、字体、按钮、卡片这些「公共零件」都定义在这里。
+
+   改配色的最简单办法：只改下面 :root 里的几个色值，
+   整站颜色会一起跟着变，不用去翻各个页面。
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   一、配色变量（浅色模式）
+   ------------------------------------------------------------ */
+:root {
+	/* ★ 要改：品牌主色。默认用的是 Windows 蓝 #0078d4，
+	   想换配色只改这两行就够了 */
+	--brand: #0078d4;
+	--brand-hover: #106ebe;
+
+	/* 页面底色与卡片底色 */
+	--bg: #ffffff;
+	--bg-soft: #f5f7fa; /* 浅灰底，用于分隔区块 */
+	--card: #ffffff;
+
+	/* 文字颜色：主要 / 次要 / 更淡（提示文字） */
+	--text: #1a1a1a;
+	--text-muted: #5a5f66;
+	--text-faint: #8b9098;
+
+	/* 边框与分割线 */
+	--border: #e3e6ea;
+	--border-strong: #cfd4da;
+
+	/* 功能色 */
+	--danger: #d13438;
+	--success: #107c10;
+
+	/* 阴影：只用很淡的一层，避免卡片浮夸 */
+	--shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+	--shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
+
+	/* 圆角：全站统一，改这里所有卡片按钮一起变 */
+	--radius: 10px;
+	--radius-lg: 16px;
+
+	/* 内容区最大宽度。太宽不好读，1100px 是比较稳的值 */
+	--max-width: 1100px;
+
+	/* 字体栈：优先用系统自带中文字体，不依赖任何网络字体，
+	   加载快、也不会出现「字体还没下下来先显示宋体」的闪烁 */
+	--font: 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB',
+		'Helvetica Neue', Arial, sans-serif;
+	--font-mono: 'Cascadia Code', Consolas, 'Courier New', monospace;
+}
+
+/* ------------------------------------------------------------
+   二、深色模式
+   两套触发方式：
+   ① 系统本身是深色 → 自动跟随
+   ② 用户在导航栏手动点了切换按钮 → 看 html 上的 data-theme 属性
+   ------------------------------------------------------------ */
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme='light']) {
+		--brand: #4aa3f0;
+		--brand-hover: #6bb5f5;
+		--bg: #17191c;
+		--bg-soft: #1e2125;
+		--card: #212429;
+		--text: #eaecef;
+		--text-muted: #a8aeb6;
+		--text-faint: #787f88;
+		--border: #2f3339;
+		--border-strong: #3d434a;
+		--danger: #f1707a;
+		--success: #4caf50;
+		--shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+		--shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+	}
+}
+
+/* 用户手动选了深色（覆盖系统设置） */
+:root[data-theme='dark'] {
+	--brand: #4aa3f0;
+	--brand-hover: #6bb5f5;
+	--bg: #17191c;
+	--bg-soft: #1e2125;
+	--card: #212429;
+	--text: #eaecef;
+	--text-muted: #a8aeb6;
+	--text-faint: #787f88;
+	--border: #2f3339;
+	--border-strong: #3d434a;
+	--danger: #f1707a;
+	--success: #4caf50;
+	--shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+	--shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+/* ------------------------------------------------------------
+   三、基础重置
+   ------------------------------------------------------------ */
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+html {
+	/* 平滑滚动：点导航里的锚点链接时会滑过去，而不是瞬间跳过去 */
+	scroll-behavior: smooth;
+	/* 防止页面横向抖动 */
+	overflow-x: hidden;
+}
+
+body {
+	margin: 0;
+	font-family: var(--font);
+	/* 正文字号与行高：16px / 1.7 是中文阅读比较舒服的组合 */
+	font-size: 16px;
+	line-height: 1.7;
+	color: var(--text);
+	background: var(--bg);
+	-webkit-font-smoothing: antialiased;
+}
+
+/* 标题统一收紧一点行高，中文标题行高太大会显得散 */
+h1,
+h2,
+h3,
+h4 {
+	line-height: 1.3;
+	margin: 0 0 0.5em;
+	font-weight: 600;
+}
+
+h1 {
+	font-size: 2.2rem;
+}
+
+h2 {
+	font-size: 1.6rem;
+}
+
+h3 {
+	font-size: 1.15rem;
+}
+
+p {
+	margin: 0 0 1em;
+}
+
+/* 链接默认不带下划线，悬停时才显示，界面更干净 */
+a {
+	color: var(--brand);
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+/* 图片默认不超出容器 */
+img {
+	max-width: 100%;
+	height: auto;
+	display: block;
+}
+
+/* 键盘 Tab 聚焦时要能看见焦点在哪，这是无障碍的基本要求 */
+:focus-visible {
+	outline: 2px solid var(--brand);
+	outline-offset: 2px;
+}
+
+/* 代码块 */
+code {
+	font-family: var(--font-mono);
+	font-size: 0.9em;
+	background: var(--bg-soft);
+	padding: 0.15em 0.4em;
+	border-radius: 4px;
+}
+
+pre {
+	background: var(--bg-soft);
+	padding: 16px;
+	border-radius: var(--radius);
+	overflow-x: auto;
+	border: 1px solid var(--border);
+}
+
+pre code {
+	background: none;
+	padding: 0;
+}
+
+/* ------------------------------------------------------------
+   四、公共布局零件
+   ------------------------------------------------------------ */
+
+/* 居中容器，全站内容都套在这个里面 */
+.container {
+	width: 100%;
+	max-width: var(--max-width);
+	margin: 0 auto;
+	padding: 0 24px;
+}
+
+/* 内容区上下留白，让区块之间有呼吸感 */
+.section {
+	padding: 80px 0;
+}
+
+/* 浅灰底区块，用来把相邻区块区分开 */
+.section-soft {
+	background: var(--bg-soft);
+}
+
+/* 区块标题，居中 + 下方一句副标题 */
+.section-title {
+	text-align: center;
+	margin-bottom: 12px;
+}
+
+.section-subtitle {
+	text-align: center;
+	color: var(--text-muted);
+	margin-bottom: 48px;
+	font-size: 1rem;
+}
+
+/* ------------------------------------------------------------
+   五、按钮
+   一个按钮 = .btn + 颜色修饰类，比如 class="btn btn-primary"
+   ------------------------------------------------------------ */
+.btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	padding: 12px 26px;
+	border-radius: var(--radius);
+	border: 1px solid transparent;
+	font-size: 1rem;
+	font-family: inherit;
+	font-weight: 500;
+	cursor: pointer;
+	transition: background 0.15s, border-color 0.15s, transform 0.1s;
+	text-decoration: none;
+}
+
+/* 悬停时轻微上浮，给一点点反馈 */
+.btn:hover {
+	text-decoration: none;
+	transform: translateY(-1px);
+}
+
+.btn:active {
+	transform: translateY(0);
+}
+
+/* 主按钮：实心品牌蓝 */
+.btn-primary {
+	background: var(--brand);
+	color: #fff;
+}
+
+.btn-primary:hover {
+	background: var(--brand-hover);
+}
+
+/* 次按钮：描边 */
+.btn-outline {
+	background: transparent;
+	color: var(--text);
+	border-color: var(--border-strong);
+}
+
+.btn-outline:hover {
+	border-color: var(--brand);
+	color: var(--brand);
+}
+
+/* 大号按钮，欢迎页最后一屏用 */
+.btn-lg {
+	padding: 16px 44px;
+	font-size: 1.125rem;
+}
+
+.btn-sm {
+	padding: 8px 18px;
+	font-size: 0.9rem;
+}
+
+/* ------------------------------------------------------------
+   六、卡片
+   ------------------------------------------------------------ */
+.card {
+	background: var(--card);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-lg);
+	padding: 28px;
+	transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+
+.card:hover {
+	border-color: var(--border-strong);
+	box-shadow: var(--shadow-lg);
+	transform: translateY(-2px);
+}
+
+/* 自动铺开的卡片网格：宽度不够时会自动换行，
+   不用写媒体查询就能适配手机 */
+.grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+	gap: 24px;
+}
+
+/* ------------------------------------------------------------
+   七、小工具类
+   ------------------------------------------------------------ */
+.text-muted {
+	color: var(--text-muted);
+}
+
+.text-faint {
+	color: var(--text-faint);
+	font-size: 0.9rem;
+}
+
+.text-center {
+	text-align: center;
+}
+
+.mt-0 {
+	margin-top: 0;
+}
+
+.mt-2 {
+	margin-top: 16px;
+}
+
+.mt-4 {
+	margin-top: 32px;
+}
+
+.mb-0 {
+	margin-bottom: 0;
+}
+
+/* 徽标：版本号旁边那个小标签 */
+.badge {
+	display: inline-block;
+	padding: 2px 10px;
+	border-radius: 999px;
+	font-size: 0.8rem;
+	background: var(--bg-soft);
+	border: 1px solid var(--border);
+	color: var(--text-muted);
+	vertical-align: middle;
+}
+
+.badge-brand {
+	background: color-mix(in srgb, var(--brand) 12%, transparent);
+	border-color: color-mix(in srgb, var(--brand) 35%, transparent);
+	color: var(--brand);
+}
+
+/* 屏幕阅读器专用：内容只给读屏软件看，视觉上隐藏 */
+.sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
+
+/* ------------------------------------------------------------
+   八、Markdown 正文区（更新日志详情页用）
+   ------------------------------------------------------------ */
+.prose {
+	max-width: 760px;
+	margin: 0 auto;
+}
+
+.prose h2 {
+	margin-top: 2em;
+	padding-bottom: 0.3em;
+	border-bottom: 1px solid var(--border);
+}
+
+.prose h3 {
+	margin-top: 1.6em;
+}
+
+.prose ul,
+.prose ol {
+	padding-left: 1.5em;
+}
+
+.prose li {
+	margin-bottom: 0.4em;
+}
+
+.prose blockquote {
+	margin: 1.5em 0;
+	padding: 12px 20px;
+	border-left: 3px solid var(--brand);
+	background: var(--bg-soft);
+	border-radius: 0 var(--radius) var(--radius) 0;
+	color: var(--text-muted);
+}
+
+.prose table {
+	width: 100%;
+	border-collapse: collapse;
+	margin: 1.5em 0;
+}
+
+.prose th,
+.prose td {
+	border: 1px solid var(--border);
+	padding: 10px 14px;
+	text-align: left;
+}
+
+.prose th {
+	background: var(--bg-soft);
+}
+
+.prose hr {
+	border: none;
+	border-top: 1px solid var(--border);
+	margin: 2.5em 0;
+}
+
+/* ------------------------------------------------------------
+   九、打印样式
+   有人会直接把网页打印/存成 PDF 看，顺手处理一下
+   ------------------------------------------------------------ */
+@media print {
+	.btn,
+	nav,
+	footer {
+		display: none;
+	}
+
+	body {
+		background: #fff;
+		color: #000;
+	}
+}

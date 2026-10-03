@@ -1,0 +1,243 @@
+---
+// ============================================================
+//  下载页（路径 /download）
+//
+//  ★ 要改：下载地址、版本号 → src/data/site.ts
+//  ★ 要改：下面「系统要求」「安装步骤」里的文字 → 直接改本文件
+//
+//  ⚠ 重要：安装包不要提交进仓库，继续放在 GitHub Releases 上。
+//    仓库里的文件会永久留在 Git 历史中，越滚越大；
+//    而且 GitHub Pages 站点本身有 1GB 的容量上限。
+// ============================================================
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { site, links } from '../data/site';
+---
+
+<BaseLayout title="下载" description={`下载 SERVICES FOR Windows v${site.version}，适用于 Windows 10 及以上系统。`}>
+	<section class="section">
+		<div class="container">
+			<h1 class="section-title">下载</h1>
+			<p class="section-subtitle">选择合适的方式获取程序。</p>
+
+			<!-- ============================================================
+			     当前版本卡片
+			     ============================================================ -->
+			<div class="download-card">
+				<div class="download-head">
+					<div>
+						<div class="download-version">v{site.version}</div>
+						<div class="text-faint">发布于 {site.releaseDate}</div>
+					</div>
+					<span class="badge badge-brand">{site.versionStage}</span>
+				</div>
+
+				<p class="download-desc">
+					适配 64 位 Windows 系统。下载的是安装程序，运行后按向导提示完成安装。
+				</p>
+
+				<div class="download-actions">
+					<a class="btn btn-primary btn-lg" href={links.download} target="_blank" rel="noopener">
+						立即下载
+					</a>
+					<!-- 站内页面，不要加 target="_blank"，否则会另开一个标签页 -->
+					<a class="btn btn-outline" href="/history">
+						历史版本
+					</a>
+				</div>
+
+				<p class="text-faint download-note">
+					点击下载即表示你已阅读并同意我们的许可证条款。
+				</p>
+			</div>
+
+			<!-- ============================================================
+			     系统要求
+			     ★ 要改：按实际情况调整
+			     ============================================================ -->
+			<div class="info-block">
+				<h2>系统要求</h2>
+				<table class="info-table">
+					<tbody>
+						<tr>
+							<th>操作系统</th>
+							<td>Windows 10 及以上（64 位）</td>
+						</tr>
+						<tr>
+							<th>运行环境</th>
+							<td>无需额外安装运行库，双击即可运行</td>
+						</tr>
+						<tr>
+							<th>磁盘占用</th>
+							<td>约 10 MB</td>
+						</tr>
+						<tr>
+							<th>网络</th>
+							<td>除下载外不需要联网，主要功能均为离线可用</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+
+			<!-- ============================================================
+			     安装步骤
+			     ★ 要改：按实际情况调整
+			     ============================================================ -->
+			<div class="info-block">
+				<h2>使用步骤</h2>
+				<ol class="step-list">
+					<li>
+						<strong>下载</strong>
+						<p>点击上方「立即下载」按钮，获取最新版本的安装程序。</p>
+					</li>
+					<li>
+						<strong>安装</strong>
+						<p>运行下载好的安装程序，按向导提示完成安装。建议装在固定的目录，账号数据会保存在程序所在目录。</p>
+					</li>
+					<li>
+						<strong>运行</strong>
+						<p>安装完成后启动程序。</p>
+					</li>
+					<li>
+						<strong>首次使用</strong>
+						<p>按照界面提示注册账号后即可使用全部功能。</p>
+					</li>
+				</ol>
+
+				<p class="text-faint">
+					如果你更习惯免安装的方式，<a href="/history">历史版本</a>页里也提供对应版本的免安装压缩包。
+				</p>
+			</div>
+
+			<!-- ============================================================
+			     遇到问题
+			     ============================================================ -->
+			<div class="info-block">
+				<h2>遇到问题</h2>
+				<p class="text-muted">
+					如果下载或使用过程中遇到问题，可以先查阅更新日志中是否已说明，
+					或通过页脚的邮箱与我们联系。
+				</p>
+				<p>
+					<a class="btn btn-outline btn-sm" href="/changelog">查看更新日志</a>
+				</p>
+			</div>
+		</div>
+	</section>
+</BaseLayout>
+
+<style>
+	.download-card {
+		max-width: 720px;
+		margin: 0 auto 64px;
+		padding: 36px;
+		background: var(--card);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-lg);
+		box-shadow: var(--shadow);
+		text-align: center;
+	}
+
+	.download-head {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 14px;
+		margin-bottom: 16px;
+	}
+
+	.download-version {
+		font-size: 1.6rem;
+		font-weight: 600;
+		font-family: var(--font-mono);
+	}
+
+	.download-desc {
+		color: var(--text-muted);
+		margin-bottom: 26px;
+	}
+
+	.download-actions {
+		display: flex;
+		justify-content: center;
+		flex-wrap: wrap;
+		gap: 12px;
+	}
+
+	.download-note {
+		margin: 22px 0 0;
+	}
+
+	/* ---- 信息区块 ---- */
+	.info-block {
+		max-width: 720px;
+		margin: 0 auto 56px;
+	}
+
+	.info-block h2 {
+		font-size: 1.3rem;
+		padding-bottom: 10px;
+		border-bottom: 1px solid var(--border);
+	}
+
+	.info-table {
+		width: 100%;
+		border-collapse: collapse;
+	}
+
+	.info-table th,
+	.info-table td {
+		padding: 12px 0;
+		border-bottom: 1px solid var(--border);
+		text-align: left;
+		vertical-align: top;
+	}
+
+	.info-table th {
+		width: 130px;
+		font-weight: 400;
+		color: var(--text-muted);
+	}
+
+	.step-list {
+		padding-left: 0;
+		list-style: none;
+		counter-reset: step;
+	}
+
+	.step-list li {
+		position: relative;
+		padding-left: 44px;
+		margin-bottom: 26px;
+		counter-increment: step;
+	}
+
+	/* 用 CSS 计数器画序号圆点，不用手写数字 */
+	.step-list li::before {
+		content: counter(step);
+		position: absolute;
+		left: 0;
+		top: 2px;
+		display: grid;
+		place-items: center;
+		width: 28px;
+		height: 28px;
+		border-radius: 50%;
+		background: color-mix(in srgb, var(--brand) 12%, transparent);
+		color: var(--brand);
+		font-size: 0.85rem;
+		font-weight: 600;
+	}
+
+	.step-list strong {
+		display: block;
+		margin-bottom: 4px;
+	}
+
+	.step-list p {
+		margin: 0;
+		color: var(--text-muted);
+		font-size: 0.92rem;
+	}
+
+</style>

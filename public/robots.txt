@@ -1,0 +1,15 @@
+# 搜索引擎爬虫抓取规则：允许抓取全站。
+
+User-agent: *
+Allow: /
+
+# 关于站点地图（sitemap）：
+# 本项目默认没有装 sitemap 插件，所以下面这行是注释掉的。
+# 想要生成 sitemap，执行：
+#   npm install @astrojs/sitemap
+# 然后在 astro.config.mjs 的 defineConfig 里加上：
+#   integrations: [sitemap()]
+# 最后把下面这行的注释去掉（域名按实际情况改）。
+#
+# Sitemap: https://sfw.us.ci/sitemap-index.xml
+

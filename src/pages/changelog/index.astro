@@ -1,0 +1,126 @@
+---
+// ============================================================
+//  更新日志列表页（路径 /changelog）
+//
+//  这个页面的内容完全自动生成：
+//  它会把 src/content/changelog/ 里所有 .md 文件读出来，
+//  按日期从新到旧排列。你只管加 md 文件，不用改这里。
+// ============================================================
+
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+// 取全部日志：过滤掉草稿 → 按日期倒序
+const posts = (
+	await getCollection('changelog', ({ data }) => !data.draft)
+).sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+---
+
+<BaseLayout title="更新日志" description="SERVICES FOR Windows 的版本更新记录。">
+	<section class="section">
+		<div class="container">
+			<h1 class="section-title">更新日志</h1>
+			<p class="section-subtitle">共 {posts.length} 次更新。</p>
+
+			{
+				posts.length === 0 ? (
+					<p class="text-muted text-center">还没有更新日志。</p>
+				) : (
+					<div class="timeline">
+						{posts.map((post) => (
+							<article class="entry">
+								<div class="entry-meta">
+									<span class="badge badge-brand">v{post.data.version}</span>
+									<time class="text-faint">
+										{post.data.pubDate.toLocaleDateString('zh-CN')}
+									</time>
+								</div>
+								<h2 class="entry-title">
+									<a href={`/changelog/${post.id}`}>{post.data.title}</a>
+								</h2>
+								{post.data.summary && <p class="entry-summary">{post.data.summary}</p>}
+								<a class="entry-more" href={`/changelog/${post.id}`}>
+									阅读全文 →
+								</a>
+							</article>
+						))}
+					</div>
+				)
+			}
+		</div>
+	</section>
+</BaseLayout>
+
+<style>
+	.timeline {
+		max-width: 780px;
+		margin: 0 auto;
+		/* 左侧竖线：用 border-left 做时间轴的骨架 */
+		border-left: 2px solid var(--border);
+		padding-left: 32px;
+	}
+
+	.entry {
+		position: relative;
+		padding-bottom: 44px;
+	}
+
+	.entry:last-child {
+		padding-bottom: 0;
+	}
+
+	/* 时间轴上的圆点 */
+	.entry::before {
+		content: '';
+		position: absolute;
+		left: -39px;
+		top: 8px;
+		width: 12px;
+		height: 12px;
+		border-radius: 50%;
+		background: var(--brand);
+		/* 外面一圈和背景同色的描边，让圆点和竖线之间有间隙 */
+		box-shadow: 0 0 0 4px var(--bg);
+	}
+
+	.entry-meta {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		margin-bottom: 10px;
+	}
+
+	.entry-title {
+		margin: 0 0 8px;
+		font-size: 1.25rem;
+	}
+
+	.entry-title a {
+		color: var(--text);
+	}
+
+	.entry-title a:hover {
+		color: var(--brand);
+		text-decoration: none;
+	}
+
+	.entry-summary {
+		color: var(--text-muted);
+		font-size: 0.95rem;
+		margin-bottom: 10px;
+	}
+
+	.entry-more {
+		font-size: 0.92rem;
+	}
+
+	@media (max-width: 600px) {
+		.timeline {
+			padding-left: 22px;
+		}
+
+		.entry::before {
+			left: -29px;
+		}
+	}
+</style>

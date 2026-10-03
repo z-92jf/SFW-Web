@@ -1,0 +1,100 @@
+---
+// ============================================================
+//  全站公共骨架（BaseLayout）
+//
+//  每个页面都套这一层。它负责：
+//    - 输出 <html> / <head>，设置标题、描述、图标（SEO 相关）
+//    - 引入全站样式
+//    - 按需渲染顶部导航栏和页脚
+//
+//  ★ 新加一个页面时，只需要开头写：
+//      <BaseLayout title="页面名"> ...内容... </BaseLayout>
+//    导航和页脚会自动带上，不用复制粘贴。
+//
+//  ★ 要改：导航栏、页脚的外观在 components/Nav.astro 和
+//    components/Footer.astro 里；菜单项和联系方式在 data/site.ts 里。
+// ============================================================
+
+import { site } from '../data/site';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import '../styles/global.css';
+
+interface Props {
+	/** 浏览器标签页标题。不填则用「产品名 · 一句话简介」 */
+	title?: string;
+	/** SEO 描述。不填则用 site.ts 里的全局描述 */
+	description?: string;
+	/**
+	 * 是否显示导航栏和页脚。
+	 * ★ 欢迎页（src/pages/index.astro）把它设成 false——
+	 *   欢迎页是个全屏独立的引导页，不应该有导航栏，
+	 *   否则用户能绕过欢迎页直接跳走，仪式感就没了。
+	 */
+	showChrome?: boolean;
+	/** 给 <body> 加的额外 class，个别页面要特殊排版时用 */
+	bodyClass?: string;
+}
+
+const { title, description, showChrome = true, bodyClass = '' } = Astro.props;
+
+// 组装最终标题。首页不传 title 时用「产品名 · 简介」，
+// 内页传了 title 时用「页面名 · 产品名」——这是搜索引擎比较友好的习惯
+const pageTitle = title ? `${title} · ${site.title}` : `${site.title} · ${site.tagline}`;
+const pageDesc = description ?? site.description;
+// 当前页面的完整地址，用于 og:url 和 canonical
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+		<title>{pageTitle}</title>
+		<meta name="description" content={pageDesc} />
+		<meta name="keywords" content={site.keywords} />
+		<link rel="canonical" href={canonical} />
+		<link rel="icon" type="image/svg+xml" href={site.favicon} />
+
+		<!-- 分享到微信 / QQ / 微博 时显示的卡片信息 -->
+		<meta property="og:type" content="website" />
+		<meta property="og:title" content={pageTitle} />
+		<meta property="og:description" content={pageDesc} />
+		<meta property="og:url" content={canonical} />
+		<!-- 分享缩略图。在 site.ts 里填了 site.ogImage 才会输出这一行，没填就跳过 -->
+		{site.ogImage && <meta property="og:image" content={new URL(site.ogImage, Astro.site)} />}
+		<meta name="twitter:card" content={site.ogImage ? 'summary_large_image' : 'summary'} />
+
+		<!--
+			下面这段脚本必须放在 <head> 里、而且必须是内联的。
+			它的唯一任务是：在页面刚刚开始渲染时就把深浅色状态定下来。
+			如果放到页面底部再执行，深色模式用户会先看到一瞬间的白屏
+			（俗称「闪白」），体验很糟。
+		-->
+		<script is:inline>
+			(function () {
+				try {
+					var saved = localStorage.getItem('sfw-theme');
+					if (saved === 'dark' || saved === 'light') {
+						document.documentElement.setAttribute('data-theme', saved);
+					}
+				} catch (e) {
+					/* 隐私模式下 localStorage 可能不可用，忽略即可 */
+				}
+			})();
+		</script>
+	</head>
+
+	<body class={bodyClass}>
+		{showChrome && <Nav />}
+
+		<!-- 每个页面的具体内容会填进这个 slot -->
+		<main>
+			<slot />
+		</main>
+
+		{showChrome && <Footer />}
+	</body>
+</html>

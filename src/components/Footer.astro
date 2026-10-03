@@ -1,0 +1,154 @@
+---
+// ============================================================
+//  页脚
+//
+//  ★ 要改：版权归属、起始年份、联系方式 →
+//    全部在 src/data/site.ts 的 footer 和 contact 里改，
+//    不用动这个文件。
+// ============================================================
+
+import { site, links, contact, footer } from '../data/site';
+
+// 自动算出年份区间，比如 2024–2026。
+// 如果今年和起始年份相同，就只显示一个年份，不会出现「2026-2026」
+const now = new Date().getFullYear();
+const yearRange = now > footer.since ? `${footer.since}-${now}` : `${now}`;
+
+// 把联系方式的「用途 → 邮箱」整理成数组，空的自动过滤掉。
+// 这样你哪天删掉某一行邮箱，页面上也会跟着少一行，不留空标签
+const contactList = [
+	{ label: '想加入我们', mail: contact.join },
+	{ label: '想投诉', mail: contact.report },
+	{ label: '想发布评论', mail: contact.comment },
+].filter((c) => c.mail && c.mail.trim() !== '');
+---
+
+<footer class="site-footer">
+	<div class="container">
+		<div class="footer-grid">
+			<!-- 第一列：产品名 + 一句话 -->
+			<div>
+				<div class="footer-brand">{site.title}</div>
+				<p class="text-muted footer-tagline">{site.tagline}</p>
+			</div>
+
+			<!-- 第二列：站内导航 -->
+			<div>
+				<div class="footer-heading">导航</div>
+				<ul class="footer-list">
+					<li><a href="/top">首页</a></li>
+					<li><a href="/download">下载</a></li>
+					<li><a href="/changelog">更新日志</a></li>
+					<li><a href="/about">关于我们</a></li>
+				</ul>
+			</div>
+
+			<!-- 第三列：外部链接 -->
+			<div>
+				<div class="footer-heading">相关链接</div>
+				<ul class="footer-list">
+					<li><a href={links.releases} target="_blank" rel="noopener">历史版本</a></li>
+					<li><a href={links.github} target="_blank" rel="noopener">GitHub</a></li>
+				</ul>
+			</div>
+
+			<!-- 第四列：联系方式。contactList 为空时整列不显示 -->
+			{
+				contactList.length > 0 && (
+					<div>
+						<div class="footer-heading">联系我们</div>
+						<ul class="footer-list">
+							{contactList.map((c) => (
+								<li>
+									{c.label}：<a href={`mailto:${c.mail}`}>{c.mail}</a>
+								</li>
+							))}
+						</ul>
+					</div>
+				)
+			}
+		</div>
+
+		<div class="footer-bottom">
+			<span>© {yearRange} {footer.owner} All rights reserved.</span>
+			{footer.extra && <span class="text-faint">{footer.extra}</span>}
+		</div>
+	</div>
+</footer>
+
+<style>
+	.site-footer {
+		margin-top: 80px;
+		padding: 56px 0 32px;
+		background: var(--bg-soft);
+		border-top: 1px solid var(--border);
+		font-size: 0.92rem;
+	}
+
+	.footer-grid {
+		display: grid;
+		grid-template-columns: 1.6fr 1fr 1fr 1.4fr;
+		gap: 32px;
+	}
+
+	.footer-brand {
+		font-size: 1.05rem;
+		font-weight: 600;
+		margin-bottom: 6px;
+	}
+
+	.footer-tagline {
+		margin: 0;
+		max-width: 260px;
+		font-size: 0.9rem;
+	}
+
+	.footer-heading {
+		font-weight: 600;
+		margin-bottom: 10px;
+	}
+
+	.footer-list {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	.footer-list li {
+		margin-bottom: 6px;
+		color: var(--text-muted);
+	}
+
+	.footer-list a {
+		color: var(--text-muted);
+	}
+
+	.footer-list a:hover {
+		color: var(--brand);
+	}
+
+	.footer-bottom {
+		display: flex;
+		justify-content: space-between;
+		flex-wrap: wrap;
+		gap: 8px;
+		margin-top: 40px;
+		padding-top: 20px;
+		border-top: 1px solid var(--border);
+		color: var(--text-faint);
+		font-size: 0.85rem;
+	}
+
+	/* 窄屏：两列变一列 */
+	@media (max-width: 860px) {
+		.footer-grid {
+			grid-template-columns: 1fr 1fr;
+		}
+	}
+
+	@media (max-width: 520px) {
+		.footer-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>

@@ -1,0 +1,66 @@
+# ============================================================
+#  GitHub Pages 自动部署
+#
+#  作用：你每次把代码 push 到 GitHub，这个工作流会自动
+#  在 GitHub 的服务器上安装依赖、构建网站、发布上线。
+#  你本地不需要装任何东西，也不需要手动传 dist 目录。
+#
+#  ★ 上线前要做的三件事：
+#    1. 把这个文件所在的项目推到 GitHub 仓库
+#    2. 仓库 → Settings → Pages → Source 选「GitHub Actions」
+#    3. 第一次推送后，去仓库的 Actions 标签页看运行结果
+# ============================================================
+
+name: Deploy to GitHub Pages
+
+on:
+  # ★ 要改：这里的分支名要和你仓库的默认分支一致。
+  #   现在 GitHub 新建仓库默认叫 main；
+  #   如果你的仓库是老的、默认分支叫 master，就把下面改成 master
+  push:
+    branches: [main]
+
+  # 允许在 GitHub 网页上手动点按钮触发部署（调试时很有用）
+  workflow_dispatch:
+
+# 同一个时间只跑一个部署，避免两次推送互相打架
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+# 下面这三项权限是部署到 Pages 必需的，别删
+permissions:
+  contents: read # 读取仓库代码
+  pages: write # 写入 Pages
+  id-token: write # 身份校验
+
+jobs:
+  # ---------- 第一步：构建 ----------
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 拉取仓库代码
+        uses: actions/checkout@v7
+
+      - name: 安装依赖、构建并上传产物
+        uses: withastro/action@v6
+        # 这个官方 Action 会自动识别包管理器（看到 package-lock.json 就用 npm）、
+        # 执行 npm install 和 npm run build，然后把 dist 目录打包上传。
+        #
+        # 需要额外配置时可以打开下面的注释：
+        # with:
+        #   path: .                      # Astro 项目在仓库里的位置，默认根目录
+        #   node-version: 24             # 构建用的 Node 版本，默认 24
+        #   package-manager: npm@latest  # 手动指定包管理器
+
+  # ---------- 第二步：发布 ----------
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: 部署到 GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

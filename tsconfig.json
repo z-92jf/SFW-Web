@@ -1,0 +1,13 @@
+// TypeScript 配置。
+// 这个文件基本不用动，直接继承 Astro 官方推荐的严格模式即可。
+// 严格模式的好处：写错属性名、传错类型，编辑器会立刻标红，
+// 不用等构建的时候才发现。
+{
+	"extends": "astro/tsconfigs/strict",
+	"include": [".astro/types.d.ts", "**/*.ts", "**/*.astro"],
+	"exclude": ["dist"],
+	"compilerOptions": {
+		// 允许在 .astro 文件里用 <script> 写少量 JS
+		"allowJs": true
+	}
+}

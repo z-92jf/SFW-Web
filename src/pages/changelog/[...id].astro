@@ -1,0 +1,97 @@
+---
+// ============================================================
+//  更新日志详情页（路径 /changelog/版本号，例如 /changelog/1.1.1）
+//
+//  「[...id]」是 Astro 的动态路由语法，方括号表示这里是可变的。
+//  getStaticPaths 会在构建时为每一篇日志各生成一个 HTML 文件，
+//  所以最终交付给用户的仍然是一堆纯静态页面，不需要服务器。
+//
+//  ★ 这个文件你基本不用动。要写新日志，去
+//    src/content/changelog/ 目录新建 md 文件就行。
+// ============================================================
+
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection, render } from 'astro:content';
+
+// 构建时调用：告诉 Astro 一共有哪些页面要生成
+export async function getStaticPaths() {
+	const posts = await getCollection('changelog', ({ data }) => !data.draft);
+
+	return posts.map((post) => ({
+		// params.id 会和文件名里的 [id] 对应
+		params: { id: post.id },
+		// props 会把这篇日志的数据直接传给页面使用
+		props: { post },
+	}));
+}
+
+const { post } = Astro.props;
+
+// render() 把 Markdown 正文编译成可直接放进页面的 Content 组件
+const { Content } = await render(post);
+---
+
+<BaseLayout title={`v${post.data.version} ${post.data.title}`} description={post.data.summary ?? undefined}>
+	<article class="section">
+		<div class="container">
+			<!-- 返回链接，方便用户回到列表 -->
+			<p class="back">
+				<a href="/changelog">← 返回更新日志</a>
+			</p>
+
+			<header class="post-header">
+				<div class="post-meta">
+					<span class="badge badge-brand">v{post.data.version}</span>
+					<time class="text-faint">{post.data.pubDate.toLocaleDateString('zh-CN')}</time>
+				</div>
+				<h1 class="post-title">{post.data.title}</h1>
+			</header>
+
+			<!-- 正文。.prose 这个类在 global.css 里定义了排版样式，
+			     直接渲染 Markdown 出来的 h2 / ul / blockquote 都会自动变好看 -->
+			<div class="prose">
+				<Content />
+			</div>
+
+			<footer class="post-footer">
+				<a class="btn btn-outline btn-sm" href="/changelog">返回列表</a>
+				<a class="btn btn-primary btn-sm" href="/download">前往下载</a>
+			</footer>
+		</div>
+	</article>
+</BaseLayout>
+
+<style>
+	.back {
+		margin-bottom: 28px;
+		font-size: 0.92rem;
+	}
+
+	.post-header {
+		max-width: 760px;
+		margin: 0 auto 40px;
+		padding-bottom: 24px;
+		border-bottom: 1px solid var(--border);
+	}
+
+	.post-meta {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		margin-bottom: 14px;
+	}
+
+	.post-title {
+		margin: 0;
+		font-size: clamp(1.5rem, 4vw, 2.1rem);
+	}
+
+	.post-footer {
+		max-width: 760px;
+		margin: 56px auto 0;
+		padding-top: 28px;
+		border-top: 1px solid var(--border);
+		display: flex;
+		gap: 12px;
+	}
+</style>

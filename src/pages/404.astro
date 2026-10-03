@@ -1,0 +1,58 @@
+---
+// ============================================================
+//  404 页面（路径 /404）
+//
+//  ★ 这个文件的名字必须叫 404.astro，构建后会生成 404.html，
+//    GitHub Pages 会自动识别它来处理「页面不存在」的情况。
+//    改名就失效了。
+//
+//  ★ 要改：这里的文案随便调，把路径改成 /top 或 / 都行。
+// ============================================================
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="页面不存在">
+	<section class="section">
+		<div class="container notfound">
+			<p class="code">404</p>
+			<h1 class="title">这个页面不存在</h1>
+			<p class="text-muted">
+				可能是链接输错了，或者这个页面已经被移走。
+			</p>
+			<div class="actions">
+				<a class="btn btn-primary" href="/top">回到首页</a>
+				<a class="btn btn-outline" href="/download">前往下载</a>
+			</div>
+		</div>
+	</section>
+</BaseLayout>
+
+<style>
+	.notfound {
+		text-align: center;
+		padding: 60px 24px;
+	}
+
+	.code {
+		margin: 0;
+		font-size: clamp(4rem, 14vw, 7rem);
+		font-weight: 600;
+		line-height: 1;
+		color: color-mix(in srgb, var(--brand) 30%, transparent);
+		font-family: var(--font-mono);
+	}
+
+	.title {
+		margin: 12px 0 10px;
+		font-size: 1.6rem;
+	}
+
+	.actions {
+		display: flex;
+		justify-content: center;
+		flex-wrap: wrap;
+		gap: 12px;
+		margin-top: 32px;
+	}
+</style>

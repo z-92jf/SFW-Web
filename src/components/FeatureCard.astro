@@ -1,0 +1,98 @@
+---
+// ============================================================
+//  功能卡片组件
+//
+//  首页「核心功能」区的一张卡片。
+//  卡片内容（标题、说明、链接）不是写在这里的，
+//  而是在 src/data/site.ts 的 features 数组里。
+//
+//  ★ 要改图标：改下面 icons 对象里对应的那段 SVG 路径。
+//    所有图标都用同一种风格：24x24 画布、只描边不填充，
+//    颜色跟随文字颜色（stroke="currentColor"）。
+//    想自己找图标可以去 https://lucide.dev 复制 SVG 路径。
+// ============================================================
+
+interface Props {
+	/** 用哪个图标，对应下面 icons 的键名 */
+	icon?: string;
+	title: string;
+	desc: string;
+	/** 点击跳转的地址。不传或传 null 时，卡片就是一张纯展示卡片 */
+	href?: string | null;
+}
+
+const { icon = 'panel', title, desc, href = null } = Astro.props;
+
+// 图标库。只存路径部分，外面统一套 <svg> 壳子
+const icons: Record<string, string> = {
+	// 账户：一个人形轮廓
+	account:
+		'<circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/>',
+	// 游戏：一颗棋子 + 一个叉
+	game: '<circle cx="8" cy="8" r="4"/><path d="M15 5l6 6M21 5l-6 6"/>',
+	// 面板：九宫格
+	panel:
+		'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+	// 转换：一上一下两个箭头
+	convert: '<path d="M4 8h13l-3-3M20 16H7l3 3"/>',
+};
+
+const svgContent = icons[icon] ?? icons.panel;
+
+// 有 href 就用 <a> 标签，没有就用 <div>。
+// href 为 null 时会把 undefined 传进去，Astro 不会渲染这个属性
+const Tag = href ? 'a' : 'div';
+---
+
+<Tag href={href ?? undefined} class="card feature-card">
+	<div class="feature-icon">
+		<svg
+			width="22"
+			height="22"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			stroke-width="1.8"
+			stroke-linecap="round"
+			stroke-linejoin="round"
+			set:html={svgContent}
+		/>
+	</div>
+	<h3 class="feature-title">{title}</h3>
+	<p class="feature-desc">{desc}</p>
+</Tag>
+
+<style>
+	.feature-card {
+		display: block;
+		color: inherit;
+		text-decoration: none;
+	}
+
+	.feature-card:hover {
+		text-decoration: none;
+	}
+
+	.feature-icon {
+		display: grid;
+		place-items: center;
+		width: 42px;
+		height: 42px;
+		margin-bottom: 16px;
+		border-radius: 10px;
+		background: color-mix(in srgb, var(--brand) 12%, transparent);
+		color: var(--brand);
+	}
+
+	.feature-title {
+		margin: 0 0 6px;
+		font-size: 1.05rem;
+	}
+
+	.feature-desc {
+		margin: 0;
+		color: var(--text-muted);
+		font-size: 0.92rem;
+		line-height: 1.65;
+	}
+</style>
