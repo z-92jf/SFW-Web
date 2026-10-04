@@ -106,8 +106,15 @@
 html {
 	/* 平滑滚动：点导航里的锚点链接时会滑过去，而不是瞬间跳过去 */
 	scroll-behavior: smooth;
-	/* 防止页面横向抖动 */
+
+	/* 防止横向溢出。
+	   先写 hidden 兜底，再用 clip 覆盖 —— 这两个的区别很关键：
+	   hidden 只是把超出部分「视觉上藏起来」，但元素【仍然可以被程序化横向滚动】
+	   （scrollLeft 照样能设），于是点击页内锚点时浏览器会把整个页面横向滚过去，
+	   表现为左侧的内容被推出视口。clip 则彻底禁止滚动。
+	   2026 年的主流浏览器都支持 clip，所以实际生效的基本都是它。 */
 	overflow-x: hidden;
+	overflow-x: clip;
 }
 
 body {
@@ -415,9 +422,15 @@ pre code {
 }
 
 .prose table {
-	width: 100%;
 	border-collapse: collapse;
 	margin: 1.5em 0;
+	/* 表格是最容易撑破容器的东西：列一多，它的最小宽度就压不下去。
+	   这里让它按内容宽度排，但不超过容器；超了就自己横向滚动，
+	   而不是把整个页面顶宽。display:block 是让 overflow 生效的必要条件 */
+	display: block;
+	width: max-content;
+	max-width: 100%;
+	overflow-x: auto;
 }
 
 .prose th,

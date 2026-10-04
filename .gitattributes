@@ -1,0 +1,42 @@
+# ============================================================
+#  换行符统一规则
+#
+#  为什么要有这个文件：
+#    你机器上的 Git 被配置成了 core.autocrlf=true
+#    （Git for Windows 安装时默认勾选的「检出时转成 Windows 换行」，
+#      写在 D:/Program Files/Git/etc/gitconfig 里）。
+#    这条规则会让同一个文件「在你机器上是 CRLF、在别人机器上是 LF」，
+#    从而产生大量无意义的行尾 diff，GitHub Desktop 也会一直提示。
+#
+#    .gitattributes 里的规则【优先级高于】core.autocrlf，
+#    所以在这里声明清楚即可，不必去动系统级配置
+#    —— 那个配置对你其它项目（比如 C++ 那个用 CRLF 的）还是合适的。
+#
+#  ⚠ 本项目是 Astro 网站，所有源文件统一 LF，不要改成 CRLF。
+# ============================================================
+
+# 默认：Git 自动识别哪些是文本文件，检出时一律用 LF
+* text=auto eol=lf
+
+# ---- 二进制文件 ----
+# 明确标出来，免得 Git 把它当文本处理、或试图做行尾转换
+*.ico     binary
+*.png     binary
+*.jpg     binary
+*.jpeg    binary
+*.gif     binary
+*.webp    binary
+*.woff    binary
+*.woff2   binary
+*.ttf     binary
+*.zip     binary
+*.exe     binary
+*.pdf     binary
+
+# SVG 本质是文本，也要 LF
+*.svg     text eol=lf
+
+# ---- Windows 批处理 ----
+# .bat / .cmd 必须是 CRLF，否则某些情况下会执行异常
+*.bat     text eol=crlf
+*.cmd     text eol=crlf

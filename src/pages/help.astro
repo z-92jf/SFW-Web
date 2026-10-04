@@ -200,9 +200,20 @@ const toc = headings.filter((h) => h.depth >= 2 && h.depth <= 4);
 	}
 
 	/* ---- 正文 ---- */
-	/* .prose 默认限制 760px 宽，这里两栏已经控制住了，放开限制 */
 	.help-content {
+		/* .prose 默认限制 760px 宽，这里两栏已经控制住了，放开限制 */
 		max-width: none;
+
+		/* ⚠⚠ 下面两行是修一个真实踩到的坑，别删：
+		   .prose 自带 margin: 0 auto，而【auto 外边距会让 grid item 无法 stretch】，
+		   元素宽度会退化成 fit-content —— 也就是「由内容里最长的东西」决定。
+		   结果被 <pre> 里的长代码行撑到 1590px，整页横向溢出 744px。
+		   更坑的是：global.css 里的 html{overflow-x:hidden} 只是把溢出视觉裁掉，
+		   元素本身【仍然可以被程序化横向滚动】，于是点击页内锚点时浏览器把页面
+		   横向滚了过去，左侧目录和左边文字被推出视口（表现就是「被吃了」）。
+		   显式写 width:100% + margin:0 才能真正让它老老实实待在列宽里。 */
+		width: 100%;
+		margin: 0;
 	}
 
 	/* 点目录跳转时，标题不要被吸顶的导航栏盖住 */
