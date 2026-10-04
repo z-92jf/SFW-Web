@@ -7,7 +7,7 @@
 //    不用动这个文件。
 // ============================================================
 
-import { site, links, contact, footer } from '../data/site';
+import { site, links, contact, footer, footerNav } from '../data/site';
 
 // 自动算出年份区间，比如 2024–2026。
 // 如果今年和起始年份相同，就只显示一个年份，不会出现「2026-2026」
@@ -32,14 +32,14 @@ const contactList = [
 				<p class="text-muted footer-tagline">{site.tagline}</p>
 			</div>
 
-			<!-- 第二列：站内导航 -->
+			<!-- 第二列：站内导航。
+			     清单在 src/data/site.ts 的 footerNav 里，以后增删页面改那里即可 -->
 			<div>
 				<div class="footer-heading">导航</div>
 				<ul class="footer-list">
-					<li><a href="/top">首页</a></li>
-					<li><a href="/download">下载</a></li>
-					<li><a href="/changelog">更新日志</a></li>
-					<li><a href="/about">关于我们</a></li>
+					{footerNav.map((item) => (
+						<li><a href={item.href}>{item.text}</a></li>
+					))}
 				</ul>
 			</div>
 
@@ -47,8 +47,8 @@ const contactList = [
 			<div>
 				<div class="footer-heading">相关链接</div>
 				<ul class="footer-list">
-					<li><a href={links.releases} target="_blank" rel="noopener">历史版本</a></li>
-					<li><a href={links.github} target="_blank" rel="noopener">GitHub</a></li>
+					<li><a href={links.github} target="_blank" rel="noopener">GitHub 仓库</a></li>
+					<li><a href={links.releases} target="_blank" rel="noopener">GitHub Releases</a></li>
 				</ul>
 			</div>
 

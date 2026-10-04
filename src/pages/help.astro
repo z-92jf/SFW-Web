@@ -1,0 +1,255 @@
+---
+// ============================================================
+//  帮助文档（路径 /help）
+//
+//  正文来自 src/content/help/manual.md，也就是开发者版本里的《使用说明》。
+//  左侧那个目录是**自动生成**的 —— 读取 Markdown 里所有 h2/h3/h4 标题，
+//  所以你在 md 里加一节、改个标题，目录会跟着变，不用动这个文件。
+//
+//  ★ 要改：内容 → src/content/help/manual.md
+//           目录显示几级 → 改下面 toc 的 depth 过滤
+//
+//  ⚠ 源文件是「开发者版本\1.1.1\使用说明.md」，复制过来时做了三件事：
+//    ① CRLF 换行改成 LF（和项目其它文件保持一致）
+//    ② 旧官网链接 https://z-92jf.github.io 改成 https://sfw.us.ci
+//       其中 /下载 改成了新站的 /download
+//    ③ 补上 frontmatter，并修正了两处缺 # 的站内锚点
+//    【源文件本身没有改动】——改的都是这份副本。
+// ============================================================
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { site } from '../data/site';
+import { getEntry, render } from 'astro:content';
+
+const entry = await getEntry('help', 'manual');
+if (!entry) {
+	throw new Error('找不到帮助文档：请确认 src/content/help/manual.md 存在');
+}
+
+const { Content, headings } = await render(entry);
+
+// 侧边目录只列 h2~h4：
+// h1 是文档大标题（已经在页面顶部了），h5/h6 太细碎，列进去反而看不清。
+const toc = headings.filter((h) => h.depth >= 2 && h.depth <= 4);
+---
+
+<BaseLayout title="帮助" description={`${site.title} 完整使用说明。`}>
+	<section class="section help-section">
+		<div class="container">
+			<!-- 面包屑，给用户一个「我在哪」的参照 -->
+			<nav class="help-crumb" aria-label="面包屑">
+				<a href="/top">首页</a>
+				<span class="crumb-sep">/</span>
+				<span>帮助</span>
+			</nav>
+
+			<div class="help-layout">
+				<!-- ============================================================
+				     左侧目录
+				     用 <details> 是为了兼顾两种屏幕：
+				       宽屏  → summary 被 CSS 藏掉，目录常驻展开（sticky 跟随）
+				       窄屏  → 目录挪到正文上方，点「目录」可以折叠起来不挡内容
+				     ============================================================ -->
+				<details class="help-toc" open>
+					<summary class="toc-summary">目录（{toc.length} 节）</summary>
+					<nav class="toc-nav">
+						{toc.map((h) => (
+							<a
+								class:list={['toc-link', `toc-d${h.depth}`]}
+								href={`#${h.slug}`}
+							>
+								{h.text}
+							</a>
+						))}
+					</nav>
+				</details>
+
+				<!-- 正文。.prose 的排版样式在 global.css 里 -->
+				<article class="prose help-content">
+					<Content />
+				</article>
+			</div>
+		</div>
+	</section>
+</BaseLayout>
+
+<script>
+	// ============================================================
+	// 侧边目录的「滚到哪一节就高亮哪一条」
+	// ============================================================
+	const tocLinks = Array.from(document.querySelectorAll('.toc-link'));
+
+	// 把每个目录项和它对应的标题元素配上对
+	const pairs = tocLinks
+		.map((link) => {
+			const href = link.getAttribute('href') || '';
+			// 锚点里可能带 URL 编码（比如「暴力关闭」那种），解码一下再找元素
+			const id = href.startsWith('#') ? decodeURIComponent(href.slice(1)) : '';
+			const el = id ? document.getElementById(id) : null;
+			return el ? { link: link, el: el } : null;
+		})
+		.filter((p) => p !== null);
+
+	if (pairs.length > 0) {
+		const observer = new IntersectionObserver(
+			(entries) => {
+				for (const entry of entries) {
+					if (!entry.isIntersecting) continue;
+
+					const hit = pairs.find((p) => p.el === entry.target);
+					if (!hit) continue;
+
+					tocLinks.forEach((l) => l.classList.remove('active'));
+					hit.link.classList.add('active');
+				}
+			},
+			{
+				// 上边留出导航栏的高度，下边收窄到屏幕的一小段，
+				// 这样「当前在看哪一节」的判断才贴合视觉感受
+				rootMargin: '-88px 0px -70% 0px',
+			}
+		);
+
+		pairs.forEach((p) => observer.observe(p.el));
+	}
+</script>
+
+<style>
+	.help-section {
+		padding-top: 40px;
+	}
+
+	/* ---- 面包屑 ---- */
+	.help-crumb {
+		margin-bottom: 28px;
+		font-size: 0.9rem;
+		color: var(--text-muted);
+	}
+
+	.crumb-sep {
+		margin: 0 8px;
+		color: var(--text-faint);
+	}
+
+	/* ---- 两栏布局：目录 + 正文 ---- */
+	.help-layout {
+		display: grid;
+		grid-template-columns: 250px minmax(0, 1fr);
+		gap: 52px;
+		align-items: start;
+	}
+
+	/* ---- 目录 ---- */
+	.help-toc {
+		position: sticky;
+		top: 88px;
+		max-height: calc(100vh - 120px);
+		overflow-y: auto;
+		padding-right: 10px;
+		border-right: 1px solid var(--border);
+	}
+
+	.toc-summary {
+		font-size: 0.82rem;
+		font-weight: 600;
+		color: var(--text-faint);
+		letter-spacing: 0.04em;
+		margin-bottom: 12px;
+		cursor: pointer;
+	}
+
+	.toc-nav {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	.toc-link {
+		display: block;
+		padding: 5px 10px;
+		border-radius: 6px;
+		color: var(--text-muted);
+		font-size: 0.87rem;
+		line-height: 1.5;
+		text-decoration: none;
+		transition: color 0.15s, background 0.15s;
+	}
+
+	.toc-link:hover {
+		color: var(--text);
+		background: var(--bg-soft);
+		text-decoration: none;
+	}
+
+	/* 当前所在小节 */
+	.toc-link.active {
+		color: var(--brand);
+		background: color-mix(in srgb, var(--brand) 10%, transparent);
+	}
+
+	/* 按层级缩进，结构一眼看得出来 */
+	.toc-d3 {
+		padding-left: 22px;
+		font-size: 0.84rem;
+	}
+
+	.toc-d4 {
+		padding-left: 36px;
+		font-size: 0.82rem;
+		color: var(--text-faint);
+	}
+
+	/* ---- 正文 ---- */
+	/* .prose 默认限制 760px 宽，这里两栏已经控制住了，放开限制 */
+	.help-content {
+		max-width: none;
+	}
+
+	/* 点目录跳转时，标题不要被吸顶的导航栏盖住 */
+	.help-content :global(h2),
+	.help-content :global(h3),
+	.help-content :global(h4),
+	.help-content :global(h5) {
+		scroll-margin-top: 88px;
+	}
+
+	/* 文档里的一级标题挺大的，收一点，免得跟导航栏抢视觉 */
+	.help-content :global(h1) {
+		font-size: 1.7rem;
+	}
+
+	/* ---- 宽屏：把 summary 藏掉，目录常驻展开 ---- */
+	@media (min-width: 901px) {
+		.help-toc > summary {
+			display: none;
+		}
+
+		/* details 在收起状态下内容不显示，宽屏强制展开 */
+		.help-toc:not([open]) > .toc-nav {
+			display: flex;
+		}
+	}
+
+	/* ---- 窄屏：目录挪到正文上方，变成一块可折叠的卡片 ---- */
+	@media (max-width: 900px) {
+		.help-layout {
+			grid-template-columns: 1fr;
+			gap: 28px;
+		}
+
+		.help-toc {
+			position: static;
+			max-height: none;
+			overflow: visible;
+			padding: 16px 20px;
+			background: var(--bg-soft);
+			border: 1px solid var(--border);
+			border-right: 1px solid var(--border);
+			border-radius: var(--radius-lg);
+		}
+
+		.toc-nav {
+			margin-top: 14px;
+		}
+	}
+</style>

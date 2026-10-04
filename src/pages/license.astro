@@ -1,0 +1,217 @@
+---
+// ============================================================
+//  许可证（路径 /license）
+//
+//  内容来源：开发者版本\1.1.1\使用说明.md 第 13~57 行「1.我们的许可证」
+//
+//  ⚠ 这是法律文本，措辞【不要随意改动】。
+//    要改的话，先在开发者版本的使用说明.md 里改，再同步到这里，保持两处一致。
+//    这里只做了两件事：把整段文本拆成分节，给每节加上小标题。
+// ============================================================
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { site, contact } from '../data/site';
+---
+
+<BaseLayout title="许可证" description={`${site.title} 的许可证条款。`}>
+	<section class="section">
+		<div class="container">
+			<h1 class="section-title">许可证</h1>
+			<p class="section-subtitle">SERVICES FOR Windows Noncommercial License</p>
+
+			<!-- 概要卡片 -->
+			<div class="license-card">
+				<table class="license-table">
+					<tbody>
+						<tr>
+							<th>名称</th>
+							<td>SERVICES FOR Windows Noncommercial License</td>
+						</tr>
+						<tr>
+							<th>适用版本</th>
+							<td>
+								v{site.version}
+								<span class="text-faint">（本页内容对应 {site.version} 版本随附的许可证）</span>
+							</td>
+						</tr>
+						<tr>
+							<th>许可方</th>
+							<td>z-92jf 加法工作室、张涵钦（网名：z_92jf）</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+
+			<!-- ============================================================
+			     正文：以下每一节的文字均照抄原许可证，未作改写
+			     ============================================================ -->
+			<article class="prose license-body">
+				<h2>定义</h2>
+				<p>
+					本文中的任何「许可方」指本软件的所有者 z-92jf 加法工作室、张涵钦（网名：z_92jf）。
+				</p>
+				<p>
+					本文中的任何「您」和「你」指正在阅读本条款和正在使用本软件、本软件副本的人。
+				</p>
+
+				<h2>接受条款</h2>
+				<p>
+					若要根据本条款获得任何许可，您必须同意将这些条款作为所有许可的严格义务和条件。
+				</p>
+
+				<h2>版权许可</h2>
+				<p>
+					许可方授予您本软件的版权许可，允许您出于任何允许的目的，进行所有可能会侵犯许可方版权的软件使用行为。但您仅可根据「分发许可」条款分发本软件，并仅可根据「修改与衍生作品许可」条款对本软件进行修改或创作衍生作品。
+				</p>
+
+				<h2>分发许可</h2>
+				<p>
+					许可方额外授予您分发本软件副本的版权许可。您的分发许可涵盖分发经「修改与衍生作品许可」条款允许的修改版软件及衍生作品。
+				</p>
+
+				<h2>通知义务</h2>
+				<p>
+					您必须确保从您处获得本软件任何部分副本的任何人，同时获得本条款副本或上述条款的 URL，以及许可方随软件提供的所有以 © 开头的纯文本通知内容。
+				</p>
+				<p class="license-note">
+					例如：© 2026 z-92jf 加法工作室、张涵钦（网名：z_92jf） All rights reserved.
+				</p>
+				<p class="license-note">
+					注：括号不区分全\半角。
+				</p>
+				<p>
+					以下声明方式同样具有法律效应，您也应当一并提供：
+				</p>
+				<ul class="license-variants">
+					<li>© 2026 z-92jf 加法工作室、z_92jf（张涵钦）</li>
+					<li>© 2026 z-92jf 加法工作室、z_92jf（张涵钦）</li>
+					<li>© 2026 z-92jf 加法工作室、张涵钦（z_92jf）</li>
+				</ul>
+
+				<h2>修改与衍生作品许可</h2>
+				<p>
+					许可方额外授予您出于任何允许的目的，对本软件进行修改或创作衍生作品的版权许可。
+				</p>
+
+				<h2>专利许可</h2>
+				<p>
+					许可方授予您本软件的专利许可，涵盖许可方能够许可或后续能够许可的、您使用本软件时可能侵犯的专利权利要求。
+				</p>
+
+				<h2>非商业用途</h2>
+				<p>
+					任何非商业用途均为允许的用途。除非另行说明，本许可证下所有「允许的用途」指无商业目的、无直接或间接盈利的用途。
+				</p>
+
+				<h2>个人使用</h2>
+				<p>
+					出于公共知识研究、实验与测试、个人学习、私人娱乐、爱好项目、业余活动或宗教仪式的个人使用、其他个人非商业活动，且无预期商业应用的，属于允许的用途。
+				</p>
+
+				<h2>非商业组织使用</h2>
+				<p>
+					任何慈善组织、教育机构、公共研究组织、公共安全或卫生组织、环境保护组织或政府机构的使用，无论资金来源或资金产生的义务如何，均属于允许的用途。
+				</p>
+
+				<h2>免责声明</h2>
+				<p>
+					本软件按「现状」提供，不提供任何形式的明示或暗示担保，包括但不限于适销性、特定用途适用性和不侵权的担保。
+				</p>
+				<p>
+					在任何情况下，作者或版权持有人均不对因本软件或本软件的使用或其他交易而引起的、与之相关的或由此产生的任何索赔、损害赔偿或其他责任承担责任，无论是在合同诉讼、侵权诉讼还是其他诉讼中。
+				</p>
+				<p>
+					若您违反本许可证任何条款，本许可证授予您的权利将自动终止。但您依据本许可证从其他主体获得的权利不受影响。
+				</p>
+			</article>
+
+			<!-- 底部 -->
+			<div class="license-foot">
+				<p class="text-muted">
+					本许可证随软件一同提供。下载或使用本软件即表示您已阅读并同意上述条款。
+				</p>
+				{
+					/* 邮箱在 site.ts 里被删掉时，这一整句跟着消失 */
+					contact.report && (
+						<p>
+							如有疑问，可联系 <a href={`mailto:${contact.report}`}>{contact.report}</a>。
+						</p>
+					)
+				}
+				<p class="license-actions">
+					<a class="btn btn-primary btn-sm" href="/download">前往下载</a>
+					<a class="btn btn-outline btn-sm" href="/top">返回首页</a>
+				</p>
+			</div>
+		</div>
+	</section>
+</BaseLayout>
+
+<style>
+	.license-card {
+		max-width: 760px;
+		margin: 0 auto 56px;
+		padding: 28px 32px;
+		background: var(--card);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-lg);
+	}
+
+	.license-table {
+		width: 100%;
+		border-collapse: collapse;
+	}
+
+	.license-table th,
+	.license-table td {
+		padding: 10px 0;
+		border-bottom: 1px solid var(--border);
+		text-align: left;
+		vertical-align: top;
+	}
+
+	.license-table tr:last-child th,
+	.license-table tr:last-child td {
+		border-bottom: none;
+		padding-bottom: 0;
+	}
+
+	.license-table th {
+		width: 100px;
+		font-weight: 400;
+		color: var(--text-muted);
+	}
+
+	/* 正文按 .prose 排版（定义在全局样式里） */
+	.license-body {
+		padding-bottom: 8px;
+	}
+
+	.license-note {
+		color: var(--text-muted);
+		font-size: 0.94rem;
+	}
+
+	/* 三个等价的声明写法，用列表排开更清楚 */
+	.license-variants {
+		padding-left: 1.5em;
+	}
+
+	.license-variants li {
+		font-family: var(--font-mono);
+		font-size: 0.88rem;
+		color: var(--text-muted);
+		margin-bottom: 4px;
+	}
+
+	.license-foot {
+		max-width: 760px;
+		margin: 56px auto 0;
+		padding-top: 28px;
+		border-top: 1px solid var(--border);
+	}
+
+	.license-actions .btn {
+		margin-right: 8px;
+	}
+</style>

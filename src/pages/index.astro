@@ -142,6 +142,23 @@ const latest = (
 			</p>
 		</div>
 	</section>
+
+	<!-- ============================================================
+	     跟随入口按钮
+	     固定在右下角，让用户不必滚到底部也能进官网。
+	     滚到最后一屏（底部那个「进入官网」出现）时会自动淡出，
+	     避免同一个页面上同时出现两个入口。
+
+	     ★ 不想要它，把下面这一整段删掉即可，其它地方不受影响。
+	     ★ 想换位置：改样式里 .float-enter 的 right / bottom
+	       （改 right 为 left 就跑到左下角）。
+	     ============================================================ -->
+	<a class="float-enter" href="/top" id="floatEnter">
+		<span>进入官网</span>
+		<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+			<path d="M5 12h14M13 6l6 6-6 6" />
+		</svg>
+	</a>
 </BaseLayout>
 
 <!-- ============================================================
@@ -209,12 +226,17 @@ const latest = (
 		gap: 8px;
 	}
 
-	/* 滚动提示固定在第一屏底部 */
+	/* 滚动提示固定在第一屏底部。
+	   ⚠ 这里【不要】用 left:50% + translateX(-50%) 来居中。
+	     因为这个元素同时还挂着 .reveal（入场动画），而 .reveal 也用 transform：
+	     两条规则都是单类选择器，写在后面的 .reveal 会把 translateX(-50%) 覆盖掉，
+	     结果就是提示横向跑偏半个身位。
+	     改成 left/right 撑满 + align-items 居中，完全不碰 transform。 */
 	.scroll-hint {
 		position: absolute;
 		bottom: 36px;
-		left: 50%;
-		transform: translateX(-50%);
+		left: 0;
+		right: 0;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
@@ -347,6 +369,61 @@ const latest = (
 		transform: none;
 	}
 
+	/* ------------------------------------------------------------
+	   跟随入口按钮（右下角那个「进入官网」）
+	   ⚠ 它【不能】加 .reveal 类：.reveal 用 transform 做入场动画，
+	     会和这里的 .is-hidden 淡出效果互相覆盖，导致按钮位置错乱。
+	   ------------------------------------------------------------ */
+	.float-enter {
+		position: fixed;
+		right: 28px;
+		bottom: 28px;
+		z-index: 40;
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		padding: 13px 24px;
+		border-radius: 999px;
+		background: var(--brand);
+		color: #fff;
+		font-size: 0.95rem;
+		font-weight: 500;
+		line-height: 1;
+		text-decoration: none;
+		box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+		transition: opacity 0.28s ease, transform 0.28s ease, background 0.15s;
+	}
+
+	.float-enter:hover {
+		background: var(--brand-hover);
+		text-decoration: none;
+	}
+
+	.float-enter svg {
+		transition: transform 0.2s;
+	}
+
+	.float-enter:hover svg {
+		transform: translateX(3px);
+	}
+
+	/* 底部入口出现时：淡出 + 微微下沉，并禁掉点击（避免误触看不见的按钮） */
+	.float-enter.is-hidden {
+		opacity: 0;
+		transform: translateY(14px);
+		pointer-events: none;
+	}
+
+	/* 窄屏上收小一点，免得挡住正文 */
+	@media (max-width: 560px) {
+		.float-enter {
+			right: 16px;
+			bottom: 16px;
+			padding: 11px 18px;
+			font-size: 0.88rem;
+		}
+	}
+
 	/* 尊重系统的「减少动态效果」设置：
 	   有晕动症的用户会打开这个开关，这时全部取消动画 */
 	@media (prefers-reduced-motion: reduce) {
@@ -362,6 +439,10 @@ const latest = (
 
 		.scroll-hint svg {
 			animation: none;
+		}
+
+		.float-enter {
+			transition: none;
 		}
 	}
 </style>
@@ -397,4 +478,26 @@ const latest = (
 	// 用方向键 / 空格 / PageUp、PageDown 也能翻屏。
 	// 这里不用自己实现，浏览器对 scroll-snap 的原生滚动就支持，
 	// 所以整段留空——写在这里只是提醒你「不需要额外写代码」。
+
+	// ---- 4. 跟随入口按钮：滚到最后一屏时自动隐藏 ----
+	// 盯着第四屏（.screen-final），它一进入视口就把右下角那个按钮藏起来，
+	// 免得页面上同时出现两个「进入官网」。
+	const floatEnter = document.getElementById('floatEnter');
+	const finalScreen = document.querySelector('.screen-final');
+
+	if (floatEnter && finalScreen) {
+		const finalObserver = new IntersectionObserver(
+			(entries) => {
+				for (const entry of entries) {
+					// 进来就加 is-hidden，退出去就移除
+					floatEnter.classList.toggle('is-hidden', entry.isIntersecting);
+				}
+			},
+			// 第四屏露出四分之一就算「出现了」。
+			// 想让按钮更早消失就调小这个数，想更晚消失就调大。
+			{ threshold: 0.25 }
+		);
+
+		finalObserver.observe(finalScreen);
+	}
 </script>

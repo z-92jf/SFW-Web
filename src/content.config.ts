@@ -42,7 +42,25 @@ const changelog = defineCollection({
 	}),
 });
 
+// ------------------------------------------------------------
+// 帮助文档（/help 页面用）
+// ------------------------------------------------------------
+//  内容来自 src/content/help/manual.md
+//  （由 开发者版本\1.1.1\使用说明.md 复制而来，链接已适配新官网）
+//
+//  ★ 要改：以后更新使用说明，把新版 md 覆盖到 src/content/help/manual.md 就行，
+//    /help 页面和侧边目录会自动跟着变，不用改任何 .astro 文件。
+//    注意复制过来后要保证文件开头有下面这几个字段的 frontmatter。
+const help = defineCollection({
+	loader: glob({ base: './src/content/help', pattern: '**/*.md' }),
+	schema: z.object({
+		title: z.string(),
+		description: z.string().optional(),
+		// 排序用。现在只有一个文件，留着方便以后拆成多篇
+		order: z.number().default(0),
+	}),
+});
+
 // 把定义好的集合注册出去。
-// 以后如果再加「使用文档」之类的集合，在这里一起导出即可，比如：
-// export const collections = { changelog, docs };
-export const collections = { changelog };
+// 以后如果再加别的集合，在这里一起导出即可。
+export const collections = { changelog, help };

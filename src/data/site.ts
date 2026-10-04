@@ -92,11 +92,28 @@ export const contact = {
 //   href 写站内路径时以 / 开头，比如 /top、/download。
 //   注意：欢迎页（路径 /）故意不在这个列表里——它是入口页，
 //   不应该出现在官网内部导航中。
+//   注意两点：
+//   ① 欢迎页（/）不放进来，它是入口页。
+//   ② /license 也故意不放进来 —— 许可证属于页脚和下载页的附注，
+//      放在主导航里会让菜单显得冗杂。
 export const navItems = [
 	{ text: '首页', href: '/top' },
 	{ text: '下载', href: '/download' },
 	{ text: '更新日志', href: '/changelog' },
+	{ text: '帮助', href: '/help' },
 	{ text: '关于我们', href: '/about' },
+];
+
+// 页脚「导航」那一列用的清单。
+// 这里覆盖站内**所有**页面，保证每个板块都能从页脚走到。
+export const footerNav = [
+	{ text: '首页', href: '/top' },
+	{ text: '下载', href: '/download' },
+	{ text: '历史版本', href: '/history' },
+	{ text: '更新日志', href: '/changelog' },
+	{ text: '帮助', href: '/help' },
+	{ text: '关于我们', href: '/about' },
+	{ text: '许可证', href: '/license' },
 ];
 
 /* ------------------------------------------------------------
