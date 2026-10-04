@@ -15,6 +15,10 @@
 import { defineCollection, z } from 'astro:content';
 import { glob } from 'astro/loaders';
 
+// 新闻板块的「发布主题」可选值定义在 site.ts 里，
+// 在这里引用过来做校验 —— 改主题只需要改 site.ts 那一处。
+import { newsCategories } from './data/site';
+
 const changelog = defineCollection({
 	// loader 告诉 Astro 去哪里找文件。
 	// base 可以是相对项目根目录的路径，pattern 是通配符。
@@ -61,6 +65,57 @@ const help = defineCollection({
 	}),
 });
 
+// ------------------------------------------------------------
+// 新闻板块（/news 页面用）
+// ------------------------------------------------------------
+//  一篇文章 = src/content/news/ 下的一个 .md 文件。
+//  文件名就是网址的后半段，比如 2026-10-hello.md → /news/2026-10-hello
+//
+//  ⚠ 文件名不要起成 category / author / date —— 这三个名字被分组页面占用了。
+//
+//  下面这些字段就是新闻板块的三个分类维度：
+//    pubDate  发布时间  → 列表按它排序，也能按「2026-10」这种年月归堆
+//    author   发布者    → 就是一个名字字符串，列表能按它分组
+//    category 发布主题  → 只能填 site.ts 里 newsCategories 预设的那几个
+// ------------------------------------------------------------
+const news = defineCollection({
+	loader: glob({ base: './src/content/news', pattern: '**/*.md' }),
+	schema: z.object({
+		// 文章标题
+		title: z.string(),
+
+		// 发布时间。写成 2026-10-04 这种形式，Astro 会自动转成日期对象
+		pubDate: z.coerce.date(),
+
+		// 发布者。直接写名字即可（中英文都行），列表页能按它分组，
+		// 也会生成 /news/author/<名字> 这个分组页面
+		author: z.string().min(1),
+
+		// 发布主题。⚠ 只能填预设值，填错会构建报错并指出是哪一篇。
+		//    预设值在 src/data/site.ts 的 newsCategories 里改。
+		category: z.string().refine(
+			(value) => newsCategories.some((c) => c.name === value),
+			{ message: `分类只能是：${newsCategories.map((c) => c.name).join(' / ')}` }
+		),
+
+		// 标签。可选，一篇可以贴多个，会一起进搜索索引。
+		// 和 category 的区别：category 定大类（一篇只有一个），tags 是自由关键词
+		tags: z.array(z.string()).default([]),
+
+		// 列表页显示的一句话摘要。不写的话列表里就没有那句
+		summary: z.string().optional(),
+
+		// 封面图。图片放进 public/img/news/ 后，这里写 '/img/news/xxx.png'
+		cover: z.string().optional(),
+
+		// 置顶。true 的话排在列表最前面（置顶的文章之间仍按时间倒序）
+		pinned: z.boolean().default(false),
+
+		// 草稿开关：写 true 的文章不会出现在网站上（列表、详情、分组、搜索都没有）
+		draft: z.boolean().default(false),
+	}),
+});
+
 // 把定义好的集合注册出去。
 // 以后如果再加别的集合，在这里一起导出即可。
-export const collections = { changelog, help };
+export const collections = { changelog, help, news };

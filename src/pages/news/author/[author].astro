@@ -1,0 +1,39 @@
+---
+// ============================================================
+//  按「发布者」分组的页面（路径 /news/author/<作者名>）
+//
+//  ★ 构建时自动生成 —— 你在 md 的 author 里写了谁，
+//    就会自动多出一个属于谁的文章列表页，不需要手动建文件。
+//
+//  ⚠ 如果作者名是中文，网址里会变成一长串 %XX（浏览器地址栏
+//    一般会显示回中文，功能不受影响；但分享出去的链接会比较长）。
+//    想让链接短一些，作者名建议用英文/拼音，比如 z_92jf。
+// ============================================================
+
+import NewsArchive from '../../../components/NewsArchive.astro';
+import { getNewsPosts } from '../../../lib/news';
+
+export async function getStaticPaths() {
+	const posts = await getNewsPosts();
+
+	// 去重拿到所有出现过的作者名
+	const names = [...new Set(posts.map((p) => p.data.author))];
+
+	return names.map((name) => ({
+		params: { author: name },
+		props: {
+			name,
+			posts: posts.filter((p) => p.data.author === name),
+		},
+	}));
+}
+
+const { name, posts } = Astro.props;
+---
+
+<NewsArchive
+	title={`${name} 的文章`}
+	subtitle={`由 ${name} 发布，共 ${posts.length} 篇。`}
+	posts={posts}
+	crumb="发布者"
+/>

@@ -1,0 +1,683 @@
+---
+// ============================================================
+//  新闻列表页（路径 /news）
+//
+//  这个页面把 src/content/news/ 里的文章全部列出来，并提供：
+//    · 搜索（可切换「全部内容」/「仅标题和标签」两种范围）
+//    · 筛选（按主题 / 发布者 / 时间）
+//    · 分组展示（平铺 / 按主题 / 按发布者 / 按时间）
+//    · 排序（最新优先 / 最早优先）
+//
+//  ★ 加文章不用改这个文件，去 src/content/news/ 建 md 就行。
+//  ★ 想改分类的名字，改 src/data/site.ts 的 newsCategories。
+//
+//  【实现思路】
+//  文章列表由服务端直接渲染成 HTML（这样没有 JavaScript 也能看，
+//  搜索引擎也抓得到）。页面加载后，脚本再接管搜索和筛选 ——
+//  它不重新生成卡片，只是把已有的卡片显示/隐藏、重新排序，
+//  所以速度很快，也不会出现「闪一下才出来」。
+//
+//  正文全文放在 /news/search-index.json 里按需下载，
+//  这样首页 HTML 不会因为文章多而变得臃肿。
+// ============================================================
+
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import NewsCard from '../../components/NewsCard.astro';
+import { getNewsPosts, monthKey, monthLabel } from '../../lib/news';
+import { site, newsCategories } from '../../data/site';
+
+const posts = await getNewsPosts();
+
+// 筛选器里只列【真的有文章】的选项 ——
+// 点进去空空如也的选项，不如不显示
+const usedCategories = newsCategories.filter((c) =>
+	posts.some((p) => p.data.category === c.name)
+);
+const authors = [...new Set(posts.map((p) => p.data.author))].sort();
+const months = [...new Set(posts.map((p) => monthKey(p.data.pubDate)))].sort().reverse();
+---
+
+<BaseLayout title="新闻" description={`${site.title} 的开发进展、使用教程与公告。`}>
+	<section class="section news-section">
+		<div class="container">
+			<div class="news-wrap">
+				<h1 class="section-title">新闻</h1>
+				<p class="section-subtitle">
+					{posts.length > 0
+						? `开发进展、使用教程与公告，共 ${posts.length} 篇。`
+						: '还没有文章。'}
+				</p>
+
+				{
+					posts.length > 0 && (
+						<>
+							<!-- ============================================================
+							     工具栏：搜索 + 筛选 + 分组 + 排序
+							     全部是普通表单控件，没有 JS 时也能看到（只是不生效）
+							     ============================================================ -->
+							<div class="toolbar">
+								<div class="search-row">
+									<div class="search-box">
+										<svg
+											class="search-icon"
+											width="16"
+											height="16"
+											viewBox="0 0 24 24"
+											fill="none"
+											stroke="currentColor"
+											stroke-width="2"
+											stroke-linecap="round"
+											aria-hidden="true"
+										>
+											<circle cx="11" cy="11" r="7" />
+											<path d="M20 20l-3.5-3.5" />
+										</svg>
+										<input
+											id="newsQ"
+											type="search"
+											placeholder="搜索标题、正文、作者或标签…"
+											autocomplete="off"
+											aria-label="搜索文章"
+										/>
+										<button id="newsClear" class="search-clear" type="button" hidden aria-label="清空搜索">
+											×
+										</button>
+									</div>
+
+									<select id="newsScope" class="select" aria-label="搜索范围">
+										<option value="all">全部内容</option>
+										<option value="meta">仅标题和标签</option>
+									</select>
+								</div>
+
+								<div class="filter-row">
+									<select id="newsCategory" class="select" aria-label="按主题筛选">
+										<option value="">全部主题</option>
+										{usedCategories.map((c) => (
+											<option value={c.name}>{c.name}</option>
+										))}
+									</select>
+
+									<select id="newsAuthor" class="select" aria-label="按发布者筛选">
+										<option value="">全部发布者</option>
+										{authors.map((a) => (
+											<option value={a}>{a}</option>
+										))}
+									</select>
+
+									<select id="newsMonth" class="select" aria-label="按时间筛选">
+										<option value="">全部时间</option>
+										{months.map((m) => (
+											<option value={m}>{monthLabel(m)}</option>
+										))}
+									</select>
+
+									<button id="newsReset" class="btn btn-outline btn-sm" type="button">
+										重置
+									</button>
+								</div>
+
+								<div class="view-row">
+									<div class="segmented" role="group" aria-label="分组方式">
+										<span class="seg-label">分组</span>
+										<button type="button" data-group="none" class="seg active">平铺</button>
+										<button type="button" data-group="category" class="seg">主题</button>
+										<button type="button" data-group="author" class="seg">发布者</button>
+										<button type="button" data-group="date" class="seg">时间</button>
+									</div>
+
+									<select id="newsSort" class="select" aria-label="排序方式">
+										<option value="desc">最新优先</option>
+										<option value="asc">最早优先</option>
+									</select>
+								</div>
+							</div>
+
+							<noscript>
+								<p class="text-muted noscript-note">
+									搜索和筛选需要浏览器启用 JavaScript。下面是全部文章。
+								</p>
+							</noscript>
+
+							<!-- 结果计数。由脚本更新 -->
+							<p id="newsCount" class="result-count" />
+
+							<!-- 空结果提示 -->
+							<p id="newsEmpty" class="text-muted text-center empty-note" hidden>
+								没有找到匹配的文章，试试换个关键词或点「重置」。
+							</p>
+
+							<!--
+								文章列表。这里由服务端渲染出全部卡片，
+								脚本只负责显示/隐藏和重新排序，不重新生成 DOM
+							-->
+							<div id="newsList" class="news-list">
+								{posts.map((post) => (
+									<NewsCard post={post} live />
+								))}
+							</div>
+						</>
+					)
+				}
+
+				{posts.length === 0 && <p class="text-muted text-center">还没有文章。</p>}
+			</div>
+		</div>
+	</section>
+</BaseLayout>
+
+<script>
+	// ============================================================
+	// 列表页的搜索 / 筛选 / 分组 / 排序
+	//
+	// 全部在浏览器里完成：不重新请求服务器，也不重新生成卡片，
+	// 只是把服务端已经渲染好的卡片挑出来、排好、摆回去。
+	// ============================================================
+	const listEl = document.getElementById('newsList');
+
+	if (listEl) {
+		const cards = Array.from(listEl.querySelectorAll('.news-card'));
+
+		const qInput = document.getElementById('newsQ');
+		const clearBtn = document.getElementById('newsClear');
+		const scopeSel = document.getElementById('newsScope');
+		const catSel = document.getElementById('newsCategory');
+		const authorSel = document.getElementById('newsAuthor');
+		const monthSel = document.getElementById('newsMonth');
+		const sortSel = document.getElementById('newsSort');
+		const resetBtn = document.getElementById('newsReset');
+		const countEl = document.getElementById('newsCount');
+		const emptyEl = document.getElementById('newsEmpty');
+		const groupBtns = Array.from(document.querySelectorAll('[data-group]'));
+
+		// 当前筛选状态。下面所有交互最终都只改这个对象，然后 render()
+		const state = {
+			q: '',
+			scope: 'all',
+			category: '',
+			author: '',
+			month: '',
+			group: 'none',
+			sort: 'desc',
+		};
+
+		// ---- 1. 从网址里恢复状态（这样 ?q=xxx 这种分享链接能直接用）----
+		const params = new URLSearchParams(location.search);
+		if (params.get('q')) state.q = params.get('q');
+		if (params.get('scope') === 'meta') state.scope = 'meta';
+		if (params.get('category')) state.category = params.get('category');
+		if (params.get('author')) state.author = params.get('author');
+		if (params.get('month')) state.month = params.get('month');
+		if (['category', 'author', 'date'].includes(params.get('group') || ''))
+			state.group = params.get('group');
+		if (params.get('sort') === 'asc') state.sort = 'asc';
+
+		// 把状态回填到控件上
+		qInput.value = state.q;
+		clearBtn.hidden = state.q === '';
+		scopeSel.value = state.scope;
+		catSel.value = state.category;
+		authorSel.value = state.author;
+		monthSel.value = state.month;
+		sortSel.value = state.sort;
+		groupBtns.forEach((b) => b.classList.toggle('active', b.dataset.group === state.group));
+
+		// ---- 2. 搜索索引（含正文全文），后台异步取，不挡首屏 ----
+		// 取回来之前，「全部内容」模式先退化成按标题和标签搜 ——
+		// 所以即使网络慢，搜索也不会是坏的，只是范围窄一点
+		const indexMap = new Map();
+		fetch('/news/search-index.json')
+			.then((res) => (res.ok ? res.json() : []))
+			.then((rows) => {
+				rows.forEach((row) => indexMap.set(row.id, row));
+				// 索引到了之后，如果用户已经在搜了，重跑一次把正文也算进去
+				if (state.q) render();
+			})
+			.catch(() => {
+				/* 拿不到索引就算了，按标题搜也能用 */
+			});
+
+		// ---- 3. 判断一张卡片是否符合当前筛选 ----
+		function matches(card) {
+			if (state.category && card.dataset.category !== state.category) return false;
+			if (state.author && card.dataset.author !== state.author) return false;
+			if (state.month && card.dataset.month !== state.month) return false;
+			if (!state.q) return true;
+
+			// 空格分隔的多个关键词，要【全部命中】才算匹配
+			const terms = state.q.toLowerCase().split(/\s+/).filter(Boolean);
+			if (terms.length === 0) return true;
+
+			const row = indexMap.get(card.dataset.id);
+			const haystack =
+				state.scope === 'meta' || !row ? card.dataset.meta : row.haystackAll;
+
+			return terms.every((t) => haystack.includes(t));
+		}
+
+		// ---- 4. 排序：置顶的永远在最前，其余按时间 ----
+		function sorted(items) {
+			return items.slice().sort((a, b) => {
+				const pa = a.dataset.pinned === 'true' ? 1 : 0;
+				const pb = b.dataset.pinned === 'true' ? 1 : 0;
+				if (pa !== pb) return pb - pa;
+				const cmp = a.dataset.date.localeCompare(b.dataset.date);
+				return state.sort === 'asc' ? cmp : -cmp;
+			});
+		}
+
+		// ---- 5. 分组方式 ----
+		function groupOf(card) {
+			if (state.group === 'category') {
+				return {
+					key: card.dataset.category,
+					label: card.dataset.category,
+					href: `/news/category/${card.dataset.catSlug}`,
+				};
+			}
+			if (state.group === 'author') {
+				return {
+					key: card.dataset.author,
+					label: card.dataset.author,
+					href: `/news/author/${encodeURIComponent(card.dataset.author)}`,
+				};
+			}
+			// date
+			const key = card.dataset.month;
+			const parts = key.split('-');
+			return {
+				key,
+				label: `${parts[0]} 年 ${Number(parts[1])} 月`,
+				href: `/news/date/${key}`,
+			};
+		}
+
+		// ---- 6. 渲染 ----
+		function render() {
+			const visible = sorted(cards.filter(matches));
+
+			// 清空容器：卡片只是被「摘下来」，节点本身还在，
+			// 下面再把它们放回去。不涉及重新创建元素
+			listEl.textContent = '';
+
+			if (visible.length === 0) {
+				emptyEl.hidden = false;
+				countEl.textContent = '';
+				return;
+			}
+			emptyEl.hidden = true;
+			countEl.textContent =
+				visible.length === cards.length
+					? `共 ${cards.length} 篇`
+					: `符合条件 ${visible.length} 篇 / 共 ${cards.length} 篇`;
+
+			// 平铺：直接铺开
+			if (state.group === 'none') {
+				visible.forEach((c) => listEl.appendChild(c));
+				return;
+			}
+
+			// 分组：按出现顺序建组 —— 因为 visible 已经排好序，
+			// 所以组与组之间的先后也跟着最新那篇走
+			const groups = new Map();
+			for (const card of visible) {
+				const g = groupOf(card);
+				if (!groups.has(g.key)) groups.set(g.key, { ...g, items: [] });
+				groups.get(g.key).items.push(card);
+			}
+
+			for (const g of groups.values()) {
+				const head = document.createElement('h2');
+				head.className = 'group-head';
+
+				const link = document.createElement('a');
+				link.href = g.href;
+				link.textContent = g.label;
+				head.appendChild(link);
+
+				const num = document.createElement('span');
+				num.className = 'group-count';
+				num.textContent = `${g.items.length} 篇`;
+				head.appendChild(num);
+
+				const body = document.createElement('div');
+				body.className = 'group-body';
+				g.items.forEach((c) => body.appendChild(c));
+
+				listEl.appendChild(head);
+				listEl.appendChild(body);
+			}
+		}
+
+		// ---- 7. 把状态同步到网址栏（用 replaceState，不产生历史记录）----
+		function syncUrl() {
+			const p = new URLSearchParams();
+			if (state.q) p.set('q', state.q);
+			if (state.scope !== 'all') p.set('scope', state.scope);
+			if (state.category) p.set('category', state.category);
+			if (state.author) p.set('author', state.author);
+			if (state.month) p.set('month', state.month);
+			if (state.group !== 'none') p.set('group', state.group);
+			if (state.sort !== 'desc') p.set('sort', state.sort);
+			const qs = p.toString();
+
+			// 用 try 包一下：个别环境（比如以 file:// 直接打开页面）
+			// 不允许改地址栏，会直接抛异常。那几个环境下筛选照样能用，
+			// 只是地址栏不会跟着变 —— 不值得为它把整个功能搞挂
+			try {
+				history.replaceState(null, '', qs ? `${location.pathname}?${qs}` : location.pathname);
+			} catch {
+				/* 忽略 */
+			}
+		}
+
+		// ---- 8. 绑定交互 ----
+		// 搜索框加了防抖：连续打字时不会每敲一下就重排一次
+		let timer = 0;
+		qInput.addEventListener('input', () => {
+			state.q = qInput.value.trim();
+			clearBtn.hidden = qInput.value === '';
+			window.clearTimeout(timer);
+			timer = window.setTimeout(() => {
+				syncUrl();
+				render();
+			}, 150);
+		});
+
+		clearBtn.addEventListener('click', () => {
+			qInput.value = '';
+			state.q = '';
+			clearBtn.hidden = true;
+			qInput.focus();
+			syncUrl();
+			render();
+		});
+
+		scopeSel.addEventListener('change', () => {
+			state.scope = scopeSel.value;
+			syncUrl();
+			render();
+		});
+		catSel.addEventListener('change', () => {
+			state.category = catSel.value;
+			syncUrl();
+			render();
+		});
+		authorSel.addEventListener('change', () => {
+			state.author = authorSel.value;
+			syncUrl();
+			render();
+		});
+		monthSel.addEventListener('change', () => {
+			state.month = monthSel.value;
+			syncUrl();
+			render();
+		});
+		sortSel.addEventListener('change', () => {
+			state.sort = sortSel.value;
+			syncUrl();
+			render();
+		});
+
+		groupBtns.forEach((btn) => {
+			btn.addEventListener('click', () => {
+				state.group = btn.dataset.group;
+				groupBtns.forEach((b) => b.classList.toggle('active', b === btn));
+				syncUrl();
+				render();
+			});
+		});
+
+		resetBtn.addEventListener('click', () => {
+			state.q = '';
+			state.scope = 'all';
+			state.category = '';
+			state.author = '';
+			state.month = '';
+			state.group = 'none';
+			state.sort = 'desc';
+
+			qInput.value = '';
+			clearBtn.hidden = true;
+			scopeSel.value = 'all';
+			catSel.value = '';
+			authorSel.value = '';
+			monthSel.value = '';
+			sortSel.value = 'desc';
+			groupBtns.forEach((b) => b.classList.toggle('active', b.dataset.group === 'none'));
+
+			syncUrl();
+			render();
+		});
+
+		// 按 Esc 清空搜索框
+		qInput.addEventListener('keydown', (e) => {
+			if (e.key === 'Escape') clearBtn.click();
+		});
+
+		// ---- 9. 首屏渲染 ----
+		// 服务端已经把全部文章渲染出来了，这里按网址里的参数过滤一遍
+		render();
+	}
+</script>
+
+<style>
+	.news-section {
+		padding-top: 48px;
+	}
+
+	/* 正文区收窄一点，一行别太长，读起来累 */
+	.news-wrap {
+		max-width: 860px;
+		margin: 0 auto;
+	}
+
+	/* ---- 工具栏 ---- */
+	.toolbar {
+		display: grid;
+		gap: 12px;
+		padding: 18px 20px;
+		margin-bottom: 28px;
+		background: var(--bg-soft);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-lg);
+	}
+
+	.search-row,
+	.filter-row,
+	.view-row {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 10px;
+	}
+
+	.view-row {
+		justify-content: space-between;
+	}
+
+	/* ---- 搜索框 ---- */
+	.search-box {
+		position: relative;
+		display: flex;
+		align-items: center;
+		flex: 1;
+		min-width: 200px;
+	}
+
+	.search-icon {
+		position: absolute;
+		left: 12px;
+		color: var(--text-faint);
+		pointer-events: none;
+	}
+
+	.search-box input {
+		width: 100%;
+		padding: 9px 34px 9px 36px;
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		background: var(--card);
+		color: var(--text);
+		font-size: 0.94rem;
+		font-family: inherit;
+	}
+
+	.search-box input:focus {
+		outline: none;
+		border-color: var(--brand);
+	}
+
+	/* 用系统自带的清除按钮会跟自定义的 × 打架，隐藏掉 */
+	.search-box input::-webkit-search-cancel-button {
+		display: none;
+	}
+
+	.search-clear {
+		position: absolute;
+		right: 8px;
+		width: 22px;
+		height: 22px;
+		padding: 0;
+		border: none;
+		border-radius: 50%;
+		background: transparent;
+		color: var(--text-faint);
+		font-size: 1.1rem;
+		line-height: 1;
+		cursor: pointer;
+	}
+
+	.search-clear:hover {
+		color: var(--text);
+		background: var(--border);
+	}
+
+	/* ---- 下拉框 ---- */
+	.select {
+		padding: 8px 10px;
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		background: var(--card);
+		color: var(--text);
+		font-size: 0.9rem;
+		font-family: inherit;
+		cursor: pointer;
+	}
+
+	.select:focus {
+		outline: none;
+		border-color: var(--brand);
+	}
+
+	/* ---- 分组切换（平铺 / 主题 / 发布者 / 时间）---- */
+	.segmented {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+	}
+
+	.seg-label {
+		margin-right: 4px;
+		color: var(--text-faint);
+		font-size: 0.85rem;
+	}
+
+	.seg {
+		padding: 6px 12px;
+		border: 1px solid transparent;
+		border-radius: 8px;
+		background: transparent;
+		color: var(--text-muted);
+		font-size: 0.88rem;
+		font-family: inherit;
+		cursor: pointer;
+		transition: color 0.15s, background 0.15s;
+	}
+
+	.seg:hover {
+		color: var(--text);
+		background: var(--card);
+	}
+
+	.seg.active {
+		color: var(--brand);
+		background: var(--card);
+		border-color: color-mix(in srgb, var(--brand) 40%, var(--border));
+	}
+
+	/* ---- 结果计数 / 空状态 ---- */
+	.result-count {
+		margin: 0 0 14px;
+		color: var(--text-faint);
+		font-size: 0.86rem;
+	}
+
+	.empty-note {
+		padding: 48px 0;
+	}
+
+	.noscript-note {
+		padding: 10px 14px;
+		margin-bottom: 16px;
+		background: var(--bg-soft);
+		border-radius: 8px;
+		font-size: 0.9rem;
+	}
+
+	/* ---- 列表 ---- */
+	.news-list {
+		display: grid;
+		gap: 16px;
+	}
+
+	/* ---- 分组视图 ---- */
+	.group-head {
+		display: flex;
+		align-items: baseline;
+		gap: 10px;
+		margin: 26px 0 4px;
+		font-size: 1.02rem;
+	}
+
+	.group-head:first-child {
+		margin-top: 0;
+	}
+
+	.group-head a {
+		color: var(--text);
+	}
+
+	.group-head a:hover {
+		color: var(--brand);
+		text-decoration: none;
+	}
+
+	.group-count {
+		color: var(--text-faint);
+		font-size: 0.84rem;
+		font-weight: 400;
+	}
+
+	.group-body {
+		display: grid;
+		gap: 16px;
+	}
+
+	@media (max-width: 640px) {
+		.toolbar {
+			padding: 14px;
+		}
+
+		/* 手机上「分组」那一排塞不下，允许横向滚动 */
+		.segmented {
+			overflow-x: auto;
+			padding-bottom: 2px;
+		}
+
+		.view-row {
+			align-items: flex-start;
+			flex-direction: column;
+		}
+	}
+</style>

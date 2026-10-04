@@ -1,0 +1,102 @@
+---
+// ============================================================
+//  分组页的外壳（主题页 / 发布者页 / 时间页 共用）
+//
+//  三个分组页的差别只有「标题、副标题、文章列表」，
+//  外框（面包屑、返回链接、排版）都一样，所以抽到这里。
+// ============================================================
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+import NewsCard from './NewsCard.astro';
+import type { NewsPost } from '../lib/news';
+
+interface Props {
+	// 页面大标题，比如「开发日志」或「z_92jf 的文章」
+	title: string;
+	// 标题下面那句说明
+	subtitle?: string;
+	// 本组的文章（调用方已经按 getNewsPosts 的顺序排好）
+	posts: NewsPost[];
+	// 面包屑中间那一段，比如「主题」「发布者」「时间」
+	crumb: string;
+}
+
+const { title, subtitle, posts, crumb } = Astro.props;
+---
+
+<BaseLayout title={title} description={subtitle}>
+	<section class="section archive-section">
+		<div class="container">
+			<div class="archive-wrap">
+				<nav class="crumb" aria-label="面包屑">
+					<a href="/top">首页</a>
+					<span class="crumb-sep">/</span>
+					<a href="/news">新闻</a>
+					<span class="crumb-sep">/</span>
+					<span>{crumb}</span>
+				</nav>
+
+				<h1 class="archive-title">{title}</h1>
+				<p class="archive-sub">{subtitle}</p>
+
+				<div class="archive-list">
+					{posts.map((post) => <NewsCard post={post} />)}
+				</div>
+
+				<p class="archive-back">
+					<a class="btn btn-outline btn-sm" href="/news">← 返回新闻列表</a>
+				</p>
+			</div>
+		</div>
+	</section>
+</BaseLayout>
+
+<style>
+	.archive-section {
+		padding-top: 40px;
+	}
+
+	.archive-wrap {
+		max-width: 860px;
+		margin: 0 auto;
+	}
+
+	/* ---- 面包屑 ---- */
+	.crumb {
+		margin-bottom: 24px;
+		font-size: 0.9rem;
+		color: var(--text-muted);
+	}
+
+	.crumb-sep {
+		margin: 0 8px;
+		color: var(--text-faint);
+	}
+
+	.archive-title {
+		margin: 0 0 10px;
+		font-size: 1.7rem;
+	}
+
+	.archive-sub {
+		margin: 0 0 32px;
+		color: var(--text-muted);
+		font-size: 0.96rem;
+	}
+
+	.archive-list {
+		display: grid;
+		gap: 16px;
+	}
+
+	.archive-back {
+		margin-top: 36px;
+		text-align: center;
+	}
+
+	@media (max-width: 640px) {
+		.archive-title {
+			font-size: 1.4rem;
+		}
+	}
+</style>

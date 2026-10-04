@@ -1,0 +1,38 @@
+---
+// ============================================================
+//  按「发布时间」分组的页面（路径 /news/date/<年-月>）
+//
+//  比如 /news/date/2026-10/ 会列出 2026 年 10 月发布的全部文章。
+//
+//  ★ 构建时自动生成 —— 你在 md 里写了哪个月的日期，
+//    就会自动多出一个对应月份的页面，不需要手动建文件。
+// ============================================================
+
+import NewsArchive from '../../../components/NewsArchive.astro';
+import { getNewsPosts, monthKey, monthLabel } from '../../../lib/news';
+
+export async function getStaticPaths() {
+	const posts = await getNewsPosts();
+
+	// 去重拿到所有出现过的「年-月」
+	const keys = [...new Set(posts.map((p) => monthKey(p.data.pubDate)))];
+
+	return keys.map((key) => ({
+		params: { month: key },
+		props: {
+			key,
+			label: monthLabel(key),
+			posts: posts.filter((p) => monthKey(p.data.pubDate) === key),
+		},
+	}));
+}
+
+const { label, posts } = Astro.props;
+---
+
+<NewsArchive
+	title={label}
+	subtitle={`${label}发布的文章，共 ${posts.length} 篇。`}
+	posts={posts}
+	crumb="时间"
+/>

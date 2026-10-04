@@ -98,6 +98,7 @@ export const contact = {
 //      放在主导航里会让菜单显得冗杂。
 export const navItems = [
 	{ text: '首页', href: '/top' },
+	{ text: '新闻', href: '/news' },
 	{ text: '下载', href: '/download' },
 	{ text: '更新日志', href: '/changelog' },
 	{ text: '帮助', href: '/help' },
@@ -106,8 +107,10 @@ export const navItems = [
 
 // 页脚「导航」那一列用的清单。
 // 这里覆盖站内**所有**页面，保证每个板块都能从页脚走到。
+// 刚好 8 项，页脚那列排成两列后每列 4 个，很整齐。
 export const footerNav = [
 	{ text: '首页', href: '/top' },
+	{ text: '新闻', href: '/news' },
 	{ text: '下载', href: '/download' },
 	{ text: '历史版本', href: '/history' },
 	{ text: '更新日志', href: '/changelog' },
@@ -115,6 +118,43 @@ export const footerNav = [
 	{ text: '关于我们', href: '/about' },
 	{ text: '许可证', href: '/license' },
 ];
+
+/* ------------------------------------------------------------
+   四·五、新闻板块（/news）
+   ------------------------------------------------------------ */
+// 「发布主题」的可选值 —— 这是新闻板块三个分类维度之一。
+//
+//   文章 frontmatter 里的 category 只能填这里的某一个 name，
+//   填错的话 `npm run build` 会直接报错，并告诉你哪一篇写错了。
+//   好处是不会出现「分类打错字 → 这篇文章从分组里消失」这种问题。
+//
+//   name 是页面上显示的中文名；slug 是网址里那一段。slug 一律用小写英文，
+//   这样 /news/category/devlog/ 这种链接在任何环境下都不会出问题
+//   （中文直接进网址会被编码成一长串 %E5%BC%80…，不好看也不好分享）。
+//
+// ★ 要改：想增删主题，改这个数组就行，顺序 = 列表页「主题」筛选器的显示顺序。
+//
+//   ⚠ 加了新主题之后，已经被旧文章用过的主题不要删 —— 否则那些文章会构建失败。
+//     想停用某个主题又不想改旧文章，就把它留着，只是不再用即可。
+export const newsCategories = [
+	{ slug: 'news', name: '公告' },
+	{ slug: 'new-version', name: '版本发布' },
+	{ slug: 'devlog', name: '开发日志' },
+	{ slug: 'activity', name: '活动' },
+	{ slug: 'help', name: '教程' },
+] as const;
+
+export type NewsCategory = (typeof newsCategories)[number]['name'];
+
+// 主题「中文名 ↔ 网址 slug」互转。
+// 页面里统一用这两个函数，省得到处写 find()。
+export function categorySlug(name: string): string {
+	return newsCategories.find((c) => c.name === name)?.slug ?? name;
+}
+
+export function categoryName(slug: string): string {
+	return newsCategories.find((c) => c.slug === slug)?.name ?? slug;
+}
 
 /* ------------------------------------------------------------
    五、首页功能卡片

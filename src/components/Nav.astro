@@ -208,6 +208,9 @@ const currentPath = Astro.url.pathname;
 		color: var(--text-muted);
 		font-size: 0.95rem;
 		text-decoration: none;
+		/* 菜单项一律不换行。窗口偏窄时宁可让它稍微挤一点，
+		   也不要出现某个菜单项被拆成两行、把导航栏撑高 */
+		white-space: nowrap;
 		transition: color 0.15s, background 0.15s;
 	}
 
@@ -306,8 +309,15 @@ const currentPath = Astro.url.pathname;
 		border-radius: 1px;
 	}
 
-	/* ---- 窄屏适配：菜单收进下拉面板 ---- */
-	@media (max-width: 720px) {
+	/* ---- 窄屏适配：菜单收进下拉面板 ----
+	   ⚠ 断点为什么是 860px 而不是更小：
+	   三栏布局是「1fr auto 1fr」，中间那栏固定是菜单的宽度，
+	   两侧各分一半剩余空间 —— 靠这个才做到严格居中。
+	   但 1fr 的「最小值」是内容宽度，一旦两侧内容比分配到的宽度还宽，
+	   列宽就会失衡，中间那栏跟着偏离中心。
+	   实测菜单加到 6 项后，窗口窄于约 840px 时菜单就会开始偏移，
+	   所以干脆在 860px 就把菜单收进下拉面板。 */
+	@media (max-width: 860px) {
 		/* 窄屏不再是三栏，退回两端对齐。
 		   ⚠ 这里必须同样写成两级选择器，否则优先级低于上面的
 		     「.site-nav .nav-inner」，display: flex 会被那条 grid 规则压回去。 */

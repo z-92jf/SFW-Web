@@ -1,0 +1,325 @@
+---
+// ============================================================
+//  新闻详情页（路径 /news/文章文件名）
+//
+//  文件名就是网址，比如 src/content/news/2026-10-04-hello.md
+//  对应的网址是 /news/2026-10-04-hello
+//
+//  ★ 这个文件不用动。写文章去 src/content/news/ 建 md 就行。
+//
+//  「[id]」是 Astro 的动态路由语法。getStaticPaths 会在构建时
+//  为每一篇文章各生成一个 HTML 文件，所以交付给用户的仍然是
+//  一堆纯静态页面，不需要服务器。
+//
+//  ⚠ 这里用的是 [id]（单段）而不是 [...id]（多段），
+//    否则会把 /news/category/xxx 这类分组页面也吞进来。
+// ============================================================
+
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getNewsPosts, formatDate } from '../../lib/news';
+import { categorySlug, site } from '../../data/site';
+import { render } from 'astro:content';
+
+export async function getStaticPaths() {
+	const posts = await getNewsPosts();
+
+	// 「上一篇 / 下一篇」按纯时间顺序算，不受置顶影响 ——
+	// 否则置顶那篇会把前后关系打乱
+	const byDate = posts
+		.slice()
+		.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+	return byDate.map((post, i) => ({
+		params: { id: post.id },
+		props: {
+			post,
+			// 更新的那一篇（时间上离现在更近）
+			next: byDate[i - 1] ?? null,
+			// 更旧的那一篇
+			prev: byDate[i + 1] ?? null,
+		},
+	}));
+}
+
+const { post, prev, next } = Astro.props;
+const d = post.data;
+
+// render() 把 Markdown 正文编译成可直接放进页面的组件
+const { Content } = await render(post);
+---
+
+<BaseLayout title={d.title} description={d.summary ?? `${site.title} 新闻`}>
+	<article class="section post-section">
+		<div class="container">
+			<div class="post-wrap">
+				<!-- 面包屑 -->
+				<nav class="crumb" aria-label="面包屑">
+					<a href="/top">首页</a>
+					<span class="crumb-sep">/</span>
+					<a href="/news">新闻</a>
+					<span class="crumb-sep">/</span>
+					<span class="crumb-now">{d.title}</span>
+				</nav>
+
+				<header class="post-head">
+					<div class="post-meta">
+						<a class="cat-badge" href={`/news/category/${categorySlug(d.category)}`}>
+							{d.category}
+						</a>
+						<time class="text-faint" datetime={formatDate(d.pubDate)}>
+							{formatDate(d.pubDate)}
+						</time>
+						<a class="post-author" href={`/news/author/${encodeURIComponent(d.author)}`}>
+							{d.author}
+						</a>
+						{d.pinned && <span class="pin-badge">置顶</span>}
+					</div>
+
+					<h1 class="post-title">{d.title}</h1>
+					{d.summary && <p class="post-summary">{d.summary}</p>}
+				</header>
+
+				{d.cover && <img class="post-cover" src={d.cover} alt="" />}
+
+				<!-- 正文。.prose 的排版样式在 global.css 里 -->
+				<div class="prose post-body">
+					<Content />
+				</div>
+
+				{
+					d.tags.length > 0 && (
+						<div class="post-tags">
+							{d.tags.map((t) => (
+								<a class="post-tag" href={`/news?q=${encodeURIComponent(t)}`}>
+									#{t}
+								</a>
+							))}
+						</div>
+					)
+				}
+
+				<!-- 上一篇 / 下一篇 -->
+				{
+					(prev || next) && (
+						<nav class="post-neighbors" aria-label="相邻文章">
+							{prev ? (
+								<a class="neighbor" href={`/news/${prev.id}`}>
+									<span class="neighbor-dir">← 上一篇</span>
+									<span class="neighbor-title">{prev.data.title}</span>
+								</a>
+							) : (
+								<span />
+							)}
+							{next ? (
+								<a class="neighbor neighbor-next" href={`/news/${next.id}`}>
+									<span class="neighbor-dir">下一篇 →</span>
+									<span class="neighbor-title">{next.data.title}</span>
+								</a>
+							) : (
+								<span />
+							)}
+						</nav>
+					)
+				}
+
+				<p class="post-back">
+					<a class="btn btn-outline btn-sm" href="/news">← 返回新闻列表</a>
+				</p>
+			</div>
+		</div>
+	</article>
+</BaseLayout>
+
+<style>
+	.post-section {
+		padding-top: 40px;
+	}
+
+	/* 正文收窄，一行别太长 */
+	.post-wrap {
+		max-width: 780px;
+		margin: 0 auto;
+	}
+
+	/* ---- 面包屑 ---- */
+	.crumb {
+		margin-bottom: 28px;
+		font-size: 0.9rem;
+		color: var(--text-muted);
+	}
+
+	.crumb-sep {
+		margin: 0 8px;
+		color: var(--text-faint);
+	}
+
+	/* 当前页那一段可能很长，超出就用省略号 */
+	.crumb-now {
+		display: inline-block;
+		max-width: 320px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		vertical-align: bottom;
+		color: var(--text-faint);
+	}
+
+	/* ---- 头部 ---- */
+	.post-meta {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 12px;
+		margin-bottom: 14px;
+		font-size: 0.88rem;
+	}
+
+	.cat-badge {
+		padding: 3px 10px;
+		border-radius: 999px;
+		background: color-mix(in srgb, var(--brand) 12%, transparent);
+		color: var(--brand);
+		font-weight: 500;
+	}
+
+	.cat-badge:hover {
+		text-decoration: none;
+		background: color-mix(in srgb, var(--brand) 20%, transparent);
+	}
+
+	.post-author {
+		color: var(--text-muted);
+	}
+
+	.post-author::before {
+		content: '·';
+		margin-right: 8px;
+		color: var(--text-faint);
+	}
+
+	.post-author:hover {
+		color: var(--brand);
+		text-decoration: none;
+	}
+
+	.pin-badge {
+		padding: 2px 8px;
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		color: var(--text-muted);
+		font-size: 0.78rem;
+	}
+
+	.post-title {
+		margin: 0 0 12px;
+		font-size: 1.85rem;
+		line-height: 1.4;
+	}
+
+	.post-summary {
+		margin: 0;
+		padding-left: 14px;
+		border-left: 3px solid var(--border);
+		color: var(--text-muted);
+		font-size: 0.98rem;
+		line-height: 1.75;
+	}
+
+	.post-cover {
+		display: block;
+		width: 100%;
+		height: auto;
+		margin: 28px 0 0;
+		border: 1px solid var(--border);
+		border-radius: var(--radius-lg);
+	}
+
+	.post-body {
+		margin-top: 32px;
+	}
+
+	/* ---- 标签 ---- */
+	.post-tags {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 10px;
+		margin-top: 36px;
+		padding-top: 20px;
+		border-top: 1px solid var(--border);
+	}
+
+	.post-tag {
+		padding: 4px 12px;
+		border-radius: 999px;
+		background: var(--bg-soft);
+		color: var(--text-muted);
+		font-size: 0.85rem;
+	}
+
+	.post-tag:hover {
+		color: var(--brand);
+		text-decoration: none;
+	}
+
+	/* ---- 上一篇 / 下一篇 ---- */
+	.post-neighbors {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 16px;
+		margin-top: 32px;
+	}
+
+	.neighbor {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		padding: 16px 18px;
+		background: var(--card);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-lg);
+		color: var(--text);
+	}
+
+	.neighbor:hover {
+		border-color: color-mix(in srgb, var(--brand) 45%, var(--border));
+		text-decoration: none;
+	}
+
+	.neighbor-next {
+		text-align: right;
+	}
+
+	.neighbor-dir {
+		color: var(--text-faint);
+		font-size: 0.82rem;
+	}
+
+	.neighbor-title {
+		font-size: 0.95rem;
+		line-height: 1.5;
+	}
+
+	.post-back {
+		margin-top: 32px;
+		text-align: center;
+	}
+
+	@media (max-width: 640px) {
+		.post-title {
+			font-size: 1.5rem;
+		}
+
+		.crumb-now {
+			max-width: 160px;
+		}
+
+		/* 窄屏上下叠放，右对齐那条就没意义了 */
+		.post-neighbors {
+			grid-template-columns: 1fr;
+		}
+
+		.neighbor-next {
+			text-align: left;
+		}
+	}
+</style>

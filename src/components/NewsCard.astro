@@ -1,0 +1,173 @@
+---
+// ============================================================
+//  新闻卡片（列表页 / 分组页共用）
+//
+//  ★ 不用改这个文件。卡片上显示什么，全部来自 md 的 frontmatter。
+// ============================================================
+
+import type { NewsPost } from '../lib/news';
+import { formatDate, monthKey, normalize } from '../lib/news';
+import { categorySlug } from '../data/site';
+
+interface Props {
+	post: NewsPost;
+	// live = true 时输出 data-* 属性，供列表页的 JavaScript 做筛选/分组。
+	// 三个分组页面不需要这些属性，用的是默认值 false
+	live?: boolean;
+}
+
+const { post, live = false } = Astro.props;
+const d = post.data;
+
+// 「仅标题和标签」模式下要搜的内容，直接烘在卡片上，
+// 这样搜索索引还没下载完也能先按标题搜
+const meta = normalize([d.title, d.author, d.category, d.tags.join(' ')].join(' '));
+---
+
+<article
+	class="news-card"
+	data-id={live ? post.id : undefined}
+	data-category={live ? d.category : undefined}
+	data-cat-slug={live ? categorySlug(d.category) : undefined}
+	data-author={live ? d.author : undefined}
+	data-month={live ? monthKey(d.pubDate) : undefined}
+	data-date={live ? formatDate(d.pubDate) : undefined}
+	data-pinned={live ? String(d.pinned) : undefined}
+	data-meta={live ? meta : undefined}
+>
+	<div class="card-top">
+		<a class="card-cat" href={`/news/category/${categorySlug(d.category)}`}>
+			{d.category}
+		</a>
+		<time class="card-date" datetime={formatDate(d.pubDate)}>{formatDate(d.pubDate)}</time>
+		<a class="card-author" href={`/news/author/${encodeURIComponent(d.author)}`}>{d.author}</a>
+		{d.pinned && <span class="card-pin">置顶</span>}
+	</div>
+
+	<h3 class="card-title">
+		<a href={`/news/${post.id}`}>{d.title}</a>
+	</h3>
+
+	{d.summary && <p class="card-summary">{d.summary}</p>}
+
+	{
+		d.tags.length > 0 && (
+			<div class="card-tags">
+				{d.tags.map((t) => (
+					// 点标签 = 拿这个标签当关键词搜一遍，比另外做一套标签页省事
+					<a class="card-tag" href={`/news?q=${encodeURIComponent(t)}`}>
+						#{t}
+					</a>
+				))}
+			</div>
+		)
+	}
+</article>
+
+<style>
+	.news-card {
+		padding: 22px 24px;
+		background: var(--card);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-lg);
+		transition: border-color 0.15s, box-shadow 0.15s;
+	}
+
+	.news-card:hover {
+		border-color: color-mix(in srgb, var(--brand) 45%, var(--border));
+		box-shadow: var(--shadow);
+	}
+
+	.card-top {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 10px;
+		margin-bottom: 10px;
+		font-size: 0.85rem;
+	}
+
+	/* 分类徽章。用品牌色淡底，一眼能看出属于哪个主题 */
+	.card-cat {
+		padding: 3px 10px;
+		border-radius: 999px;
+		background: color-mix(in srgb, var(--brand) 12%, transparent);
+		color: var(--brand);
+		font-weight: 500;
+	}
+
+	.card-cat:hover {
+		text-decoration: none;
+		background: color-mix(in srgb, var(--brand) 20%, transparent);
+	}
+
+	.card-date {
+		color: var(--text-faint);
+		/* 数字用等宽，日期对齐起来更整齐 */
+		font-variant-numeric: tabular-nums;
+	}
+
+	.card-author {
+		color: var(--text-muted);
+	}
+
+	.card-author:hover {
+		color: var(--brand);
+		text-decoration: none;
+	}
+
+	/* 作者名前加一个分隔点，避免和日期糊在一起 */
+	.card-author::before {
+		content: '·';
+		margin-right: 8px;
+		color: var(--text-faint);
+	}
+
+	.card-pin {
+		padding: 2px 8px;
+		border-radius: 4px;
+		background: var(--bg-soft);
+		border: 1px solid var(--border);
+		color: var(--text-muted);
+		font-size: 0.78rem;
+	}
+
+	.card-title {
+		margin: 0 0 8px;
+		font-size: 1.15rem;
+		line-height: 1.45;
+	}
+
+	.card-title a {
+		color: var(--text);
+	}
+
+	.card-title a:hover {
+		color: var(--brand);
+		text-decoration: none;
+	}
+
+	.card-summary {
+		margin: 0;
+		color: var(--text-muted);
+		font-size: 0.94rem;
+		line-height: 1.7;
+	}
+
+	.card-tags {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+		margin-top: 12px;
+	}
+
+	.card-tag {
+		color: var(--text-faint);
+		font-size: 0.85rem;
+	}
+
+	.card-tag:hover {
+		color: var(--brand);
+		text-decoration: none;
+	}
+</style>
