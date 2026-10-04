@@ -12,9 +12,9 @@
 //  （中文直接进网址会变成一长串 %E5%BC%80…）。
 // ============================================================
 
-import NewsArchive from '../../components/NewsArchive.astro';
-import { getNewsPosts } from '../../lib/news';
-import { newsCategories } from '../../data/site';
+import NewsArchive from '../../../components/NewsArchive.astro';
+import { getNewsPosts } from '../../../lib/news';
+import { newsCategories } from '../../../data/site';
 
 export async function getStaticPaths() {
 	const posts = await getNewsPosts();
