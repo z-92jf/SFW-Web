@@ -26,9 +26,18 @@ const contactList = [
 <footer class="site-footer">
 	<div class="container">
 		<div class="footer-grid">
-			<!-- 第一列：产品名 + 一句话 -->
+			<!-- 第一列：大字 logo + 一句话 -->
 			<div>
-				<div class="footer-brand">{site.title}</div>
+				{/* 两张图分别是白底和黑底【都不是透明背景】，
+				   所以用混合模式把底色滤掉，让它融进页脚背景：
+				     wordmark-light 配 multiply —— 白色部分被「乘」成背景色
+				     wordmark-dark  配 screen   —— 黑色部分被「滤」成背景色
+				   浅色模式显示白底那张，深色模式显示黑底那张，切换交给下面 CSS。
+				   ★ 要换图：覆盖 public/img/wordmark-light.png 和 wordmark-dark.png 即可 */}
+				<div class="footer-wordmark">
+					<img class="wordmark-light" src="/img/wordmark-light.png" alt={site.title} />
+					<img class="wordmark-dark" src="/img/wordmark-dark.png" alt="" aria-hidden="true" />
+				</div>
 				<p class="text-muted footer-tagline">{site.tagline}</p>
 			</div>
 
@@ -95,6 +104,52 @@ const contactList = [
 		font-size: 1.05rem;
 		font-weight: 600;
 		margin-bottom: 6px;
+	}
+
+	/* ---- 页脚的大字 logo ---- */
+	.footer-wordmark {
+		max-width: 230px;
+		margin-bottom: 14px;
+	}
+
+	.footer-wordmark img {
+		display: block;
+		width: 100%;
+		height: auto;
+	}
+
+	/* 这两张图都不是透明背景（一张纯白底、一张纯黑底），
+	   直接放上去会在页脚上留出一个方块。
+	   用混合模式把底色「滤掉」就能融进页脚：
+	     multiply → 白色变成背景色（浅色模式）
+	     screen   → 黑色变成背景色（深色模式） */
+	.wordmark-light {
+		mix-blend-mode: multiply;
+	}
+
+	.wordmark-dark {
+		display: none;
+		mix-blend-mode: screen;
+	}
+
+	/* 深色模式：换成黑底那张 */
+	:global(:root[data-theme='dark']) .wordmark-light {
+		display: none;
+	}
+
+	:global(:root[data-theme='dark']) .wordmark-dark {
+		display: block;
+	}
+
+	/* 用户没手动切过、系统是深色时也一样 */
+	@media (prefers-color-scheme: dark) {
+		:global(:root:not([data-theme='light'])) .wordmark-light {
+			display: none;
+		}
+
+		:global(:root:not([data-theme='light'])) .wordmark-dark {
+			display: block;
+		}
 	}
 
 	.footer-tagline {

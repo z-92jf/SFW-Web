@@ -111,24 +111,62 @@ const recentPosts = (
 	</section>
 
 	<!-- ============================================================
-	     ③ 产品截图
-	     ★ 要改：截图清单在 src/data/site.ts 的 screenshots 数组里。
-	       数组为空时整块自动隐藏（下面这个条件判断做了这件事）。
+	     ③ 界面预览（轮播）
+	     布局参考 Geek Uninstaller 官网的做法：
+	     上方是一段跟着滑动的文案，中间一张大图，两侧圆形箭头，下方小圆点。
+	     ★ 要改：内容全部在 src/data/site.ts 的 screenshots 数组里，
+	       这个文件不用动。数组为空时整块自动隐藏。
 	     ============================================================ -->
 	{
 		screenshots.length > 0 && (
 			<section class="section section-soft">
 				<div class="container">
-					<h2 class="section-title">界面预览</h2>
-					<p class="section-subtitle">实际运行效果。</p>
+					<div class="gallery" id="gallery">
+						{/* 上方文案：切图时内容会跟着变，所以标题/描述是从 slide 上取的 */}
+						<div class="gallery-head">
+							<h2 class="gallery-title" id="galleryTitle">{screenshots[0].title}</h2>
+							<p class="gallery-desc" id="galleryDesc">{screenshots[0].desc}</p>
+						</div>
 
-					<div class="shot-list">
-						{screenshots.map((s) => (
-							<figure class="shot">
-								<img src={s.src} alt={s.alt} loading="lazy" />
-								{s.caption && <figcaption class="text-faint">{s.caption}</figcaption>}
-							</figure>
-						))}
+						<div class="gallery-stage">
+							<button class="gallery-arrow gallery-prev" type="button" aria-label="上一张">
+								<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+									<path d="M15 18l-6-6 6-6" />
+								</svg>
+							</button>
+
+							<div class="gallery-viewport">
+								{/* 所有截图排成一横排躺在这条「轨道」里，
+								    切换时整条轨道左右平移，把目标那一张推到中间。
+								    外层 .gallery-viewport 负责裁剪，所以同一时刻只看得到一张。 */}
+								<div class="gallery-track" id="galleryTrack">
+									{screenshots.map((s, i) => (
+										<figure class="gallery-slide" data-title={s.title} data-desc={s.desc}>
+											{/* 第一张不用懒加载，避免刚进页面时中间是空白的 */}
+											<img src={s.src} alt={s.alt} loading={i === 0 ? 'eager' : 'lazy'} />
+										</figure>
+									))}
+								</div>
+							</div>
+
+							<button class="gallery-arrow gallery-next" type="button" aria-label="下一张">
+								<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+									<path d="M9 6l6 6-6 6" />
+								</svg>
+							</button>
+						</div>
+
+						{/* 下方小圆点：一个圆点对应一张图 */}
+						<div class="gallery-dots">
+							{screenshots.map((s, i) => (
+								<button
+									class:list={['gallery-dot', { 'is-active': i === 0 }]}
+									type="button"
+									data-index={i}
+									aria-label={`第 ${i + 1} 张：${s.title}`}
+								/>
+							))}
+						</div>
 					</div>
 				</div>
 			</section>
@@ -244,6 +282,131 @@ const recentPosts = (
 		</div>
 	</section>
 </BaseLayout>
+
+<script>
+	// ============================================================
+	// 界面预览轮播
+	//
+	// 切换方式是「整排横向平移」：所有截图排成一横排躺在 .gallery-track 里，
+	// 靠 translateX(-序号 × 100%) 把目标那一张推到中间 ——
+	// 所以看起来是新图从箭头那一侧平移进来，而不是旧图淡出、新图淡入。
+	//
+	// 节奏由下面两个常量控制，想调直接改这里：
+	const AUTO_MS = 4000; // 自动播放：每 4 秒翻一张
+	const RESUME_MS = 6000; // 用户手动翻过之后，等 6 秒没有新操作再恢复自动播放
+	// 第三个规则是「不在视野里就不翻」，见文件末尾的 IntersectionObserver
+
+	const gallery = document.getElementById('gallery');
+
+	if (gallery) {
+		const track = document.getElementById('galleryTrack');
+		const slides = Array.from(gallery.querySelectorAll('.gallery-slide'));
+		const dots = Array.from(gallery.querySelectorAll('.gallery-dot'));
+		const titleEl = document.getElementById('galleryTitle');
+		const descEl = document.getElementById('galleryDesc');
+
+		// 系统里开了「减少动态效果」的用户：不自动播放（平移动画由 CSS 那边关掉）
+		const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+		let current = 0; // 当前是第几张
+		let autoTimer = 0; // 自动播放的计时器
+		let inView = true; // 轮播是否在可视区域内
+
+		// ---- 切到第 index 张 ----
+		function show(index) {
+			// 首尾循环：在最后一张按「下一张」回到第一张，反过来也一样
+			current = (index + slides.length) % slides.length;
+
+			// 整条轨道往左推 current 个身位（负号 = 往左）。
+			// 每张图正好占满一屏，所以「一个身位」就是 100%。
+			if (track) track.style.transform = `translateX(-${current * 100}%)`;
+
+			dots.forEach((el, i) => el.classList.toggle('is-active', i === current));
+
+			// 上方的文案从当前这张图的 data-title / data-desc 上取。
+			// 用 getAttribute 而不是 dataset，省掉类型断言
+			const active = slides[current];
+			const nextTitle = active.getAttribute('data-title');
+			const nextDesc = active.getAttribute('data-desc');
+			if (titleEl && nextTitle) titleEl.textContent = nextTitle;
+			if (descEl && nextDesc) descEl.textContent = nextDesc;
+		}
+
+		// ---- 自动播放的开关 ----
+		function stopAuto() {
+			window.clearTimeout(autoTimer);
+			autoTimer = 0;
+		}
+
+		function startAuto(delay = AUTO_MS) {
+			stopAuto();
+			// 不在视野里就干脆不排下一个计时器 —— 真正做到「看不见就不动」
+			if (reduceMotion || !inView) return;
+			autoTimer = window.setTimeout(() => {
+				show(current + 1);
+				startAuto(AUTO_MS);
+			}, delay);
+		}
+
+		// 用户自己翻过之后调用。
+		// 注意这里传的是 RESUME_MS 而不是 AUTO_MS：
+		// startAuto 的语义是「等 delay 毫秒后翻下一张，之后回到每 2 秒一张」，
+		// 所以传 5 秒 = 5 秒没有新操作就翻下一张。
+		// 用户在这 5 秒里又点了一次，会因为 startAuto 内部先停表而重新计时。
+		function userTouched() {
+			startAuto(RESUME_MS);
+		}
+
+		// ---- 用户操作：箭头 / 小圆点 ----
+		gallery.querySelector('.gallery-prev')?.addEventListener('click', () => {
+			show(current - 1);
+			userTouched();
+		});
+
+		gallery.querySelector('.gallery-next')?.addEventListener('click', () => {
+			show(current + 1);
+			userTouched();
+		});
+
+		dots.forEach((dot, i) =>
+			dot.addEventListener('click', () => {
+				show(i);
+				userTouched();
+			})
+		);
+
+		// 键盘左右键也能翻页（光标在输入框里时不抢按键）
+		document.addEventListener('keydown', (event) => {
+			const tag = document.activeElement?.tagName;
+			if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+			if (event.key === 'ArrowLeft') {
+				show(current - 1);
+				userTouched();
+			}
+			if (event.key === 'ArrowRight') {
+				show(current + 1);
+				userTouched();
+			}
+		});
+
+		// ---- 只在看得见的时候自动播放 ----
+		// 轮播滚出屏幕（比如用户滚下去看更新日志了）就停掉，滚回来再继续。
+		// 用「露出四分之一」作为判定阈值。
+		if ('IntersectionObserver' in window) {
+			new IntersectionObserver(
+				(entries) => {
+					inView = entries[0].isIntersecting;
+					if (inView) startAuto(AUTO_MS);
+					else stopAuto();
+				},
+				{ threshold: 0.25 }
+			).observe(gallery);
+		} else {
+			// 极老的浏览器没有这个 API，退化成「一直自动播放」
+			startAuto(AUTO_MS);
+		}
+	}
+</script>
 
 <style>
 	/* ---- ① 首屏 ---- */
@@ -432,30 +595,152 @@ const recentPosts = (
 		color: var(--text-muted);
 	}
 
-	/* ---- ③ 截图 ---- */
-	.shot-list {
-		display: grid;
-		gap: 28px;
-	}
-
-	.shot {
-		margin: 0;
-	}
-
-	.shot img {
-		/* 不强制拉伸：图片本身比容器窄时保持原始尺寸，避免小图被放大变糊。
-		   推荐提供 1200px 宽的截图，在宽屏上正好铺满 */
-		width: auto;
-		max-width: 100%;
+	/* ---- ③ 界面预览轮播 ---- */
+	.gallery {
+		max-width: 940px;
 		margin: 0 auto;
+	}
+
+	/* 上方文案。给一个最小高度，免得文案长短不一时页面上下跳动 */
+	.gallery-head {
+		text-align: center;
+		min-height: 92px;
+		margin-bottom: 32px;
+	}
+
+	.gallery-title {
+		margin: 0 0 10px;
+		font-size: 1.5rem;
+	}
+
+	.gallery-desc {
+		max-width: 640px;
+		margin: 0 auto;
+		font-size: 0.96rem;
+		color: var(--text-muted);
+	}
+
+	.gallery-stage {
+		display: flex;
+		align-items: center;
+		gap: 18px;
+	}
+
+	/* 裁剪窗口：横向平移时，只让中间那一张露出来。
+	   注意它本身不能带 transform —— 带 transform 的话，
+	   裁剪范围会跟着元素一起移动，滑动时就什么都看不见了。
+	   所以平移的是里面那条 .gallery-track。 */
+	.gallery-viewport {
+		flex: 1;
+		/* ⚠ flex 子项必须显式 min-width:0，否则内容一宽就会把容器顶破 */
+		min-width: 0;
+		overflow: hidden;
+	}
+
+	/* 一整排截图。它自己的宽度只有一屏，但里面塞了 N 张（每张占 100%），
+	   靠 translateX 左右推它 —— 推到第几张就露出第几张。 */
+	.gallery-track {
+		display: flex;
+		/* 矮一点的图垂直居中，上下留白对称；
+		   整条轨道的高度固定为「最高的那张」，所以两侧箭头不会上下跳 */
+		align-items: center;
+		width: 100%;
+		transition: transform 0.55s cubic-bezier(0.33, 0, 0.2, 1);
+		/* 只动 transform，交给 GPU 合成，滑动更顺 */
+		will-change: transform;
+	}
+
+	/* 每一张占满一整屏，谁也不许被压缩（flex-shrink 设成 0）。
+	   padding 是留给图片外阴影的 —— 不加的话，左右两侧的阴影会被
+	   外面的裁剪窗口切掉，看起来像贴着边。 */
+	.gallery-slide {
+		flex: 0 0 100%;
+		margin: 0;
+		padding: 0 14px;
+	}
+
+	.gallery-slide img {
+		width: 100%;
+		height: auto;
+		background: var(--card);
 		border: 1px solid var(--border);
 		border-radius: var(--radius-lg);
-		box-shadow: var(--shadow);
+		box-shadow: var(--shadow-lg);
 	}
 
-	.shot figcaption {
-		margin-top: 10px;
-		text-align: center;
+	/* ---- 左右圆形箭头 ---- */
+	.gallery-arrow {
+		display: grid;
+		place-items: center;
+		flex-shrink: 0;
+		width: 44px;
+		height: 44px;
+		padding: 0;
+		border: 1px solid var(--border);
+		border-radius: 50%;
+		background: var(--card);
+		color: var(--text-muted);
+		cursor: pointer;
+		transition: color 0.15s, background 0.15s, border-color 0.15s;
+	}
+
+	.gallery-arrow:hover {
+		color: #fff;
+		background: var(--brand);
+		border-color: var(--brand);
+	}
+
+	/* ---- 下方小圆点 ---- */
+	.gallery-dots {
+		display: flex;
+		justify-content: center;
+		gap: 10px;
+		margin-top: 26px;
+	}
+
+	.gallery-dot {
+		width: 9px;
+		height: 9px;
+		padding: 0;
+		border: none;
+		border-radius: 50%;
+		background: var(--border-strong);
+		cursor: pointer;
+		transition: background 0.2s, transform 0.2s;
+	}
+
+	.gallery-dot:hover {
+		background: var(--text-faint);
+	}
+
+	/* 当前所在的这一张 */
+	.gallery-dot.is-active {
+		background: var(--brand);
+		transform: scale(1.3);
+	}
+
+	/* 窄屏：箭头收小，别挤占图片宽度 */
+	@media (max-width: 720px) {
+		.gallery-head {
+			min-height: 0;
+		}
+
+		.gallery-stage {
+			gap: 8px;
+		}
+
+		.gallery-arrow {
+			width: 34px;
+			height: 34px;
+		}
+	}
+
+	/* 尊重系统的「减少动态效果」设置：
+	   有晕动症的用户会打开这个开关，这时不做平移动画（脚本那边也一并关掉了自动播放） */
+	@media (prefers-reduced-motion: reduce) {
+		.gallery-track {
+			transition: none;
+		}
 	}
 
 	/* ---- ④ 更新列表 ---- */
