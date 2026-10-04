@@ -26,26 +26,18 @@ const contactList = [
 <footer class="site-footer">
 	<div class="container">
 		<div class="footer-grid">
-			<!-- 第一列：大字 logo + 一句话 -->
+			<!-- 第一列：一句话简介。
+			     大字 logo 已经挪到这个页脚的最底下了（铺满整行）。 -->
 			<div>
-				{/* 两张图分别是白底和黑底【都不是透明背景】，
-				   所以用混合模式把底色滤掉，让它融进页脚背景：
-				     wordmark-light 配 multiply —— 白色部分被「乘」成背景色
-				     wordmark-dark  配 screen   —— 黑色部分被「滤」成背景色
-				   浅色模式显示白底那张，深色模式显示黑底那张，切换交给下面 CSS。
-				   ★ 要换图：覆盖 public/img/wordmark-light.png 和 wordmark-dark.png 即可 */}
-				<div class="footer-wordmark">
-					<img class="wordmark-light" src="/img/wordmark-light.png" alt={site.title} />
-					<img class="wordmark-dark" src="/img/wordmark-dark.png" alt="" aria-hidden="true" />
-				</div>
 				<p class="text-muted footer-tagline">{site.tagline}</p>
 			</div>
 
 			<!-- 第二列：站内导航。
-			     清单在 src/data/site.ts 的 footerNav 里，以后增删页面改那里即可 -->
+			     清单在 src/data/site.ts 的 footerNav 里，以后增删页面改那里即可。
+			     项目比较多，排成两列（见下面 .footer-list--cols） -->
 			<div>
 				<div class="footer-heading">导航</div>
-				<ul class="footer-list">
+				<ul class="footer-list footer-list--cols">
 					{footerNav.map((item) => (
 						<li><a href={item.href}>{item.text}</a></li>
 					))}
@@ -82,6 +74,18 @@ const contactList = [
 			<span>© {yearRange} {footer.owner} All rights reserved.</span>
 			{footer.extra && <span class="text-faint">{footer.extra}</span>}
 		</div>
+
+		<!-- ============================================================
+		     底部通栏大字 logo
+		     ★ 要换图：直接覆盖 public/img/wordmark-light.png 和 wordmark-dark.png。
+		       但注意这两张图上下留白很大，这里是靠 CSS「裁」出来的，
+		       换图后如果留白比例不同，要同步调 <style> 里 .footer-wordmark 的那 4 个百分比
+		       （注释里写了每个数是怎么算出来的）。
+		     ============================================================ -->
+		<div class="footer-wordmark">
+			<img class="wordmark-light" src="/img/wordmark-light.png" alt={site.title} />
+			<img class="wordmark-dark" src="/img/wordmark-dark.png" alt="" aria-hidden="true" />
+		</div>
 	</div>
 </footer>
 
@@ -94,9 +98,13 @@ const contactList = [
 		font-size: 0.92rem;
 	}
 
+	/* 四列：简介 / 导航 / 相关链接 / 联系我们。
+	   第一列原来放的是大字 logo，现在 logo 挪到底部通栏了，
+	   所以第一列不再需要那么宽，把空间让给「导航」（它要排两列）。
+	   但第一列那句标语不能被挤到换行，所以仍给它 1.35fr。 */
 	.footer-grid {
 		display: grid;
-		grid-template-columns: 1.6fr 1fr 1fr 1.4fr;
+		grid-template-columns: 1.35fr 1.1fr 0.95fr 1.35fr;
 		gap: 32px;
 	}
 
@@ -106,16 +114,45 @@ const contactList = [
 		margin-bottom: 6px;
 	}
 
-	/* ---- 页脚的大字 logo ---- */
+	/* ---- 页脚底部的通栏大字 logo ----
+	   原图是 1783×582，但真正的文字只占中间 1647×102 那一条，
+	   上下各有一大块空白。如果整张图直接按 100% 宽显示，
+	   文字会缩得很小、而且上下各留一大片空白。
+
+	   所以这里做一个「裁剪窗口」把留白切掉：
+	     · 窗口高度 = 容器宽 × 102/1647
+	     · 图片放大到 1783/1647 倍，再用负 margin 把文字推到窗口正中
+	   下面 4 个百分比都是从原图量出来的（相对【容器宽度】），
+
+	   ★ 换了大字图、且新图留白比例不同时，按这个方法重新量一遍即可：
+	       打开新图，量出【文字范围】的 left / top / 右边界 与整张图的宽高，
+	       然后：窗口高 = 文字高 ÷ 文字宽
+	             图片宽 = 原图宽 ÷ 文字宽
+	             左移   = 文字左边距 ÷ 文字宽
+	             上移   = 文字上边距 ÷ 文字宽
+	     （当前这张：文字宽 1647、高 102、左 78、上 243、原图宽 1783） */
 	.footer-wordmark {
-		max-width: 230px;
-		margin-bottom: 14px;
+		width: 100%;
+		height: 0;
+		/* 102 ÷ 1647 = 6.1931% —— 窗口高 : 窗口宽 */
+		padding-bottom: 6.1931%;
+		margin-top: 40px;
+		overflow: hidden;
 	}
 
 	.footer-wordmark img {
 		display: block;
-		width: 100%;
+		/* 1783 ÷ 1647 = 108.2574% —— 放大后，文字正好铺满容器宽度 */
+		width: 108.2574%;
 		height: auto;
+		/* ⚠ 必须放开这条：全局样式里有「img { max-width: 100% }」，
+		   不覆盖的话图片会被卡在容器宽度上，放大 108% 那一步就失效了
+		   （实测踩到过：图片量出来只有容器宽，文字也就没铺满）。 */
+		max-width: none;
+		/* 78 ÷ 1647 = 4.7359% —— 把左边那块留白推出窗口 */
+		margin-left: -4.7359%;
+		/* 243 ÷ 1647 = 14.7541% —— 把上边那块留白推出窗口 */
+		margin-top: -14.7541%;
 	}
 
 	/* 这两张图都不是透明背景（一张纯白底、一张纯黑底），
@@ -128,33 +165,38 @@ const contactList = [
 	}
 
 	.wordmark-dark {
-		display: none;
 		mix-blend-mode: screen;
 	}
 
-	/* 深色模式：换成黑底那张 */
-	:global(:root[data-theme='dark']) .wordmark-light {
+	/* 默认只显示浅色那张。
+	   ⚠ 选择器要多带一个 .footer-wordmark，否则压不过上面那条
+	     「.footer-wordmark img { display: block }」。 */
+	.footer-wordmark .wordmark-dark {
 		display: none;
 	}
 
-	:global(:root[data-theme='dark']) .wordmark-dark {
+	/* 深色模式：换成黑底那张 */
+	:global(:root[data-theme='dark']) .footer-wordmark .wordmark-light {
+		display: none;
+	}
+
+	:global(:root[data-theme='dark']) .footer-wordmark .wordmark-dark {
 		display: block;
 	}
 
 	/* 用户没手动切过、系统是深色时也一样 */
 	@media (prefers-color-scheme: dark) {
-		:global(:root:not([data-theme='light'])) .wordmark-light {
+		:global(:root:not([data-theme='light'])) .footer-wordmark .wordmark-light {
 			display: none;
 		}
 
-		:global(:root:not([data-theme='light'])) .wordmark-dark {
+		:global(:root:not([data-theme='light'])) .footer-wordmark .wordmark-dark {
 			display: block;
 		}
 	}
 
 	.footer-tagline {
 		margin: 0;
-		max-width: 260px;
 		font-size: 0.9rem;
 	}
 
@@ -172,6 +214,15 @@ const contactList = [
 	.footer-list li {
 		margin-bottom: 6px;
 		color: var(--text-muted);
+	}
+
+	/* 「导航」那一列项目多，排成两列，免得拉成很长的一条。
+	   加这个类只会影响用到它的那个列表，其他地方照旧是单列。 */
+	.footer-list--cols {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		/* 行距靠 li 的 margin-bottom，这里只管列间距 */
+		column-gap: 20px;
 	}
 
 	.footer-list a {
