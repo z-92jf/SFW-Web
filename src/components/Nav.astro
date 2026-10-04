@@ -16,7 +16,9 @@ const currentPath = Astro.url.pathname;
 	<div class="container nav-inner">
 		<!-- 左侧：站点标识。点击回到欢迎页（而不是直接回首页） -->
 		<a href="/" class="brand">
-			<span class="brand-mark">SFW</span>
+			{/* 图标文件是 public/logo.png（256×256）。
+			   ★ 想换图标：直接覆盖这个文件即可，不用改代码。 */}
+			<img class="brand-mark" src="/logo.png" alt="" width="34" height="34" />
 			<span class="brand-text">{site.title}</span>
 		</a>
 
@@ -120,16 +122,13 @@ const currentPath = Astro.url.pathname;
 		text-decoration: none;
 	}
 
+	/* 导航栏左侧的图标（public/logo.png，256×256 的方形图，这里显示 34×34） */
 	.brand-mark {
-		display: grid;
-		place-items: center;
 		width: 34px;
 		height: 34px;
-		border-radius: 9px;
-		background: var(--brand);
-		color: #fff;
-		font-size: 0.8rem;
-		letter-spacing: 0.02em;
+		/* 不参与 flex 压缩，否则窄屏下会被挤扁 */
+		flex-shrink: 0;
+		border-radius: 8px;
 	}
 
 	.brand-text {
@@ -184,25 +183,38 @@ const currentPath = Astro.url.pathname;
 		border-color: var(--brand);
 	}
 
-	/* 太阳/月亮图标只显示其中一个：
-	   深色模式显示太阳（提示点了会变亮），浅色模式显示月亮 */
-	:global(:root[data-theme='dark']) .icon-moon,
-	:global(:root[data-theme='light']) .icon-sun {
+	/* 太阳 / 月亮两个图标，同一时刻只显示一个：
+	   深色模式显示太阳（点了会变亮），浅色模式显示月亮。
+
+	   ⚠ 顺序很关键：必须先写【默认状态】的规则。
+	   之前的写法只写了「带 data-theme 属性」和「系统深色」两种情况，
+	   于是在【用户没手动切换过 + 系统是浅色】时一条都不匹配，
+	   两个图标就同时冒出来了 —— 这正是刚进入官网时看到两个图标的原因。 */
+	.icon-sun {
 		display: none;
 	}
 
-	:global(:root[data-theme='dark']) .icon-sun,
-	:global(:root[data-theme='light']) .icon-moon {
+	.icon-moon {
 		display: block;
 	}
 
-	/* 用户没手动切换过时，跟随系统 */
+	/* 用户手动切到了深色 */
+	:global(:root[data-theme='dark']) .icon-sun {
+		display: block;
+	}
+
+	:global(:root[data-theme='dark']) .icon-moon {
+		display: none;
+	}
+
+	/* 用户没手动切过、而系统是深色 */
 	@media (prefers-color-scheme: dark) {
-		:global(:root:not([data-theme='light'])) .icon-moon {
-			display: none;
-		}
 		:global(:root:not([data-theme='light'])) .icon-sun {
 			display: block;
+		}
+
+		:global(:root:not([data-theme='light'])) .icon-moon {
+			display: none;
 		}
 	}
 

@@ -4,11 +4,13 @@
 //
 //  这是「进入官网」之后看到的第一页。
 //  结构从上到下依次是：
-//    ① 首屏大图区（产品名 + 下载按钮）
-//    ② 核心功能卡片
-//    ③ 产品截图
-//    ④ 最新更新摘要
-//    ⑤ 底部提示条
+//    ①   首屏（产品名 + 下载按钮）
+//    ①-B 数据条（几个关键数字，让页面不显得空）
+//    ②   核心功能卡片
+//    ③   产品截图
+//    ④   最新更新摘要
+//    ⑤   常见问题摘要（可展开，链接到 /help）
+//    ⑥   三步开始 + 下载按钮
 //
 //  ★ 要改内容：几乎都不用改这个文件，
 //    改 src/data/site.ts 里的 features / screenshots 即可。
@@ -61,6 +63,34 @@ const recentPosts = (
 				<p class="text-faint hero-note">
 					适用于 Windows 10 及以上系统 · 最近更新于 {site.releaseDate}
 				</p>
+			</div>
+		</div>
+	</section>
+
+	<!-- ============================================================
+	     ①-B 数据条
+	     几个关键数字，让人一眼知道这软件的分量。
+	     ★ 要改：数字和说明直接改下面的文字即可。
+	     ============================================================ -->
+	<section class="stat-bar">
+		<div class="container">
+			<div class="stat-grid">
+				<div class="stat">
+					<div class="stat-num">100<span class="stat-unit">+</span></div>
+					<div class="stat-label">系统快捷入口</div>
+				</div>
+				<div class="stat">
+					<div class="stat-num">4<span class="stat-unit">大</span></div>
+					<div class="stat-label">功能模块</div>
+				</div>
+				<div class="stat">
+					<div class="stat-num">离线</div>
+					<div class="stat-label">不联网也能用</div>
+				</div>
+				<div class="stat">
+					<div class="stat-num">免费</div>
+					<div class="stat-label">非商业使用</div>
+				</div>
 			</div>
 		</div>
 	</section>
@@ -138,15 +168,79 @@ const recentPosts = (
 	</section>
 
 	<!-- ============================================================
-	     ⑤ 底部行动区
+	     ⑤ 常见问题摘要
+	     只放最常被问到的几条，用 <details> 做成可展开的，
+	     不需要任何 JS。完整版在 /help 页面。
+	     ★ 要改：问题与答案直接改下面的文字。
+	     ============================================================ -->
+	<section class="section">
+		<div class="container">
+			<h2 class="section-title">常见问题</h2>
+			<p class="section-subtitle">
+				更多问题可以查看<a href="/help">完整使用说明</a>。
+			</p>
+
+			<div class="faq-list">
+				<details class="faq">
+					<summary>需要联网才能用吗？</summary>
+					<p>不需要。主要功能全部离线可用，只有下载和检查更新时才需要联网。</p>
+				</details>
+
+				<details class="faq">
+					<summary>账号数据存在哪里？</summary>
+					<p>
+						保存在程序所在目录，不会上传到任何服务器。
+						无论从哪个位置启动程序，读到的都是同一份数据。
+					</p>
+				</details>
+
+				<details class="faq">
+					<summary>为什么下载时杀毒软件会报警？</summary>
+					<p>
+						新发布的程序被误报比较常见，程序本身不含恶意代码。
+						可以先安装，再把安装目录加入杀毒软件的信任列表。
+					</p>
+				</details>
+
+				<details class="faq">
+					<summary>支持哪些 Windows 版本？</summary>
+					<p>Windows 10 及以上的 64 位系统，无需额外安装运行库。</p>
+				</details>
+			</div>
+		</div>
+	</section>
+
+	<!-- ============================================================
+	     ⑥ 三步开始
 	     ============================================================ -->
 	<section class="section section-soft">
-		<div class="container text-center">
-			<h2 class="section-title">开始使用</h2>
-			<p class="section-subtitle">下载后解压即可运行，无需安装。</p>
-			<a class="btn btn-primary btn-lg" href={links.download} target="_blank" rel="noopener">
-				下载 v{site.version}
-			</a>
+		<div class="container">
+			<h2 class="section-title">三步开始</h2>
+			<p class="section-subtitle">下载安装程序，按向导提示完成安装即可。</p>
+
+			<div class="start-steps">
+				<div class="start-step">
+					<div class="start-num">1</div>
+					<h3>下载</h3>
+					<p>点击下方按钮，获取最新版本的安装程序。</p>
+				</div>
+				<div class="start-step">
+					<div class="start-num">2</div>
+					<h3>安装</h3>
+					<p>运行安装程序，按向导提示完成安装。</p>
+				</div>
+				<div class="start-step">
+					<div class="start-num">3</div>
+					<h3>使用</h3>
+					<p>打开程序，注册一个离线账号即可开始。</p>
+				</div>
+			</div>
+
+			<p class="text-center mt-4">
+				<a class="btn btn-primary btn-lg" href={links.download} target="_blank" rel="noopener">
+					下载 v{site.version}
+				</a>
+			</p>
 		</div>
 	</section>
 </BaseLayout>
@@ -203,6 +297,139 @@ const recentPosts = (
 
 	.hero-note {
 		margin: 20px 0 0;
+	}
+
+	/* ---- ①-B 数据条 ---- */
+	.stat-bar {
+		padding: 34px 0;
+		background: var(--bg-soft);
+		border-top: 1px solid var(--border);
+		border-bottom: 1px solid var(--border);
+	}
+
+	/* auto-fit + minmax：窄屏自动从一行 4 个变成 2 个，不用写媒体查询 */
+	.stat-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+		gap: 24px;
+		text-align: center;
+	}
+
+	.stat-num {
+		font-family: var(--font-mono);
+		font-size: 1.9rem;
+		font-weight: 600;
+		line-height: 1.2;
+		color: var(--brand);
+	}
+
+	.stat-unit {
+		font-size: 1rem;
+		margin-left: 2px;
+	}
+
+	.stat-label {
+		margin-top: 4px;
+		font-size: 0.9rem;
+		color: var(--text-muted);
+	}
+
+	/* ---- ⑤ 常见问题 ---- */
+	.faq-list {
+		display: grid;
+		gap: 12px;
+		max-width: 820px;
+		margin: 0 auto;
+	}
+
+	.faq {
+		padding: 0 22px;
+		background: var(--card);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-lg);
+		transition: border-color 0.15s;
+	}
+
+	.faq:hover {
+		border-color: var(--border-strong);
+	}
+
+	.faq summary {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 16px;
+		padding: 18px 0;
+		font-size: 1rem;
+		font-weight: 500;
+		cursor: pointer;
+		/* 去掉浏览器默认那个小三角，下面换成自己的加号 */
+		list-style: none;
+	}
+
+	.faq summary::-webkit-details-marker {
+		display: none;
+	}
+
+	/* 用伪元素画加号／减号，展开状态换符号，不用任何 JS */
+	.faq summary::after {
+		content: '+';
+		flex-shrink: 0;
+		font-size: 1.35rem;
+		font-weight: 400;
+		line-height: 1;
+		color: var(--text-faint);
+	}
+
+	.faq[open] summary::after {
+		content: '−';
+	}
+
+	.faq p {
+		margin: 0 0 20px;
+		font-size: 0.94rem;
+		color: var(--text-muted);
+	}
+
+	/* ---- ⑥ 三步开始 ---- */
+	.start-steps {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+		gap: 24px;
+		max-width: 880px;
+		margin: 0 auto;
+	}
+
+	.start-step {
+		padding: 28px 22px;
+		text-align: center;
+		background: var(--card);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-lg);
+	}
+
+	.start-num {
+		display: grid;
+		place-items: center;
+		width: 38px;
+		height: 38px;
+		margin: 0 auto 16px;
+		border-radius: 50%;
+		background: color-mix(in srgb, var(--brand) 12%, transparent);
+		color: var(--brand);
+		font-family: var(--font-mono);
+		font-weight: 600;
+	}
+
+	.start-step h3 {
+		margin: 0 0 6px;
+		font-size: 1.05rem;
+	}
+
+	.start-step p {
+		margin: 0;
+		font-size: 0.9rem;
+		color: var(--text-muted);
 	}
 
 	/* ---- ③ 截图 ---- */
