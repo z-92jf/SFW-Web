@@ -42,7 +42,7 @@ const icons: Record<string, string> = {
 
 const svgContent = icons[icon] ?? icons.panel;
 
-// 有 href 就用 <a> 标签，没有就用 <div>。
+// 有 href 就用 a 标签，没有就用 div。
 // href 为 null 时会把 undefined 传进去，Astro 不会渲染这个属性
 const Tag = href ? 'a' : 'div';
 ---

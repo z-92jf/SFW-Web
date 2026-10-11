@@ -16,6 +16,7 @@
 // ============================================================
 
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import Comments from '../../components/Comments.astro';
 import { getNewsPosts, formatDate } from '../../lib/news';
 import { categorySlug, site } from '../../data/site';
 import { render } from 'astro:content';
@@ -128,6 +129,12 @@ const { Content } = await render(post);
 			</div>
 		</div>
 	</article>
+
+	<!--
+		评论区。服务端地址写在 src/components/Comments.astro 里，
+		要换服务端改那一个值即可。
+	-->
+	<Comments />
 </BaseLayout>
 
 <style>

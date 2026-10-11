@@ -1,0 +1,114 @@
+---
+// ============================================================
+//  评论区（Waline）
+//
+//  目前只用在新闻详情页（src/pages/news/[id].astro）的底部。
+//
+//  ★ 要改：服务端地址。以后换了服务端（比如从 Vercel 搬到腾讯云），
+//    只改下面这一个值，别的什么都不用动。
+//
+//  几个刻意的选择，都在下面的 init() 里标了注释：
+//    · 用 npm 包引入，不走任何外部 CDN（unpkg 在国内不稳定）
+//    · 禁用表情包（原来要 2MB，且默认从 unpkg 加载）
+//    · 深色模式跟随站点主题
+// ============================================================
+
+interface Props {
+	/** Waline 服务端地址。默认值就是当前在用的那个 */
+	serverURL?: string;
+}
+
+const { serverURL = 'https://waline.sfw.us.ci' } = Astro.props;
+---
+
+<section class="comments-section" aria-label="评论">
+	<div class="container">
+		<div class="comments-wrap">
+			<!--
+				这里故意【不】写「评论」标题 —— Waline 自己的界面上已经有一个了，
+				两个叠在一起会重复。无障碍语义靠上面 section 的 aria-label 兜住。
+
+				#waline 是挂载点，脚本会把整个评论区渲染进这个 div。
+				服务端地址通过 data- 属性传给脚本 ——
+				这样脚本就能用 import 的方式拿到 Waline（走站点自己的打包），
+				不必从外部 CDN 下载，国内访问也不用碰运气。
+			-->
+			<div id="waline" data-server-url={serverURL}>
+				<p class="comments-hint">正在加载评论组件…</p>
+			</div>
+		</div>
+	</div>
+</section>
+
+<script>
+	import { init } from '@waline/client';
+	// 样式跟着脚本走：只有用到本组件的页面才会加载这 23KB 的 CSS
+	import '@waline/client/style';
+
+	const el = document.getElementById('waline');
+	const serverURL = el?.dataset.serverUrl;
+
+	if (el && serverURL) {
+		init({
+			el,
+			serverURL,
+
+			// 每个页面一个独立的评论线程。
+			// 末尾斜杠要去掉 —— 否则 /news/xxx 和 /news/xxx/ 会被当成两篇文章，
+			// 评论跟着分成两拨。
+			path: window.location.pathname.replace(/\/+$/, '') || '/',
+
+			lang: 'zh-CN',
+
+			// 跟随站点主题：只要 <html> 上有 data-theme="dark" 就切暗色。
+			// BaseLayout.astro 里的初始化脚本保证这个属性任何时候都有值，
+			// 所以「系统深色 + 用户没手动切过」也能正确识别。
+			dark: 'html[data-theme="dark"]',
+
+			// 禁用表情包。
+			// Waline 默认表情从 //unpkg.com 加载（约 2MB，国内时通时不通），
+			// 与其留个点了没反应的按钮，不如直接关掉。
+			// ★ 以后想要表情：把这一行删掉，换成自己的表情包地址数组。
+			emoji: false,
+			// 图片搜索（GIF）依赖表情包资源，一并关掉
+			search: false,
+
+			// 隐藏左下角的 RSS 订阅图标。
+			// 它是 RSS 的标准橙色，跟站点配色冲突；而且「订阅某篇文章的评论」
+			// 对访客基本没有意义。注意只关这个，
+			// 「Powered by Waline」的版权行保留着 —— 那是作者要求的。
+			noRss: true,
+
+			// 允许访客注册 / 登录（默认就是 enable，写出来是为了明确意图）
+			login: 'enable',
+			// 昵称必填，避免满屏「匿名」
+			requiredMeta: ['nick'],
+
+			wordLimit: 500,
+			pageSize: 10,
+		});
+	}
+</script>
+
+<style>
+	.comments-section {
+		/* 上面是文章的 article 区块，它自己有下边距，这里只留一点点上间距 */
+		padding: 8px 0 80px;
+	}
+
+	/* 和文章正文同宽（正文在 [id].astro 里也是 780px）。
+	   上面那条细线是模块分隔，靠它把文章和评论区断开，不需要额外标题 */
+	.comments-wrap {
+		max-width: 780px;
+		margin: 0 auto;
+		padding-top: 32px;
+		border-top: 1px solid var(--border);
+	}
+
+	/* 评论组件加载出来之前先显示这句，避免一片空白 */
+	.comments-hint {
+		margin: 0;
+		color: var(--text-faint);
+		font-size: 0.9rem;
+	}
+</style>

@@ -72,16 +72,55 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
 			它的唯一任务是：在页面刚刚开始渲染时就把深浅色状态定下来。
 			如果放到页面底部再执行，深色模式用户会先看到一瞬间的白屏
 			（俗称「闪白」），体验很糟。
+
+			★ 这里【一定会】给出一个明确的值（light 或 dark），
+			  不会出现「没有 data-theme 属性」的中间状态。
+			  原因有两个：
+			  ① 评论组件（Waline）判断夜间模式用的是
+			     「html[data-theme="dark"] 这个选择器有没有命中」，
+			     属性缺失时它会误判成浅色 —— 系统是深色、用户又没手动切过时就会出错。
+			  ② 以前靠 CSS 的 @media (prefers-color-scheme) 兜底，
+			     导致每个组件都要写「默认态 + 显式态」两套规则，
+			     已经因此踩过两次坑（导航栏双图标、页脚大字图不跟着切）。
+			     现在状态唯一了，组件只用写一套。
 		-->
 		<script is:inline>
 			(function () {
+				var root = document.documentElement;
+				var saved = null;
 				try {
-					var saved = localStorage.getItem('sfw-theme');
-					if (saved === 'dark' || saved === 'light') {
-						document.documentElement.setAttribute('data-theme', saved);
-					}
+					saved = localStorage.getItem('sfw-theme');
 				} catch (e) {
 					/* 隐私模式下 localStorage 可能不可用，忽略即可 */
+				}
+
+				// 有存过的就用存过的，没存过就看系统
+				var theme =
+					saved === 'dark' || saved === 'light'
+						? saved
+						: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+							? 'dark'
+							: 'light';
+
+				root.setAttribute('data-theme', theme);
+
+				// 用户【没手动切过】时，跟着系统的深浅色变化实时更新。
+				// 一旦手动切过（localStorage 里有值），就不再跟随系统。
+				if (window.matchMedia) {
+					try {
+						window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (e) {
+							var pick = null;
+							try {
+								pick = localStorage.getItem('sfw-theme');
+							} catch (err) {
+								/* 忽略 */
+							}
+							if (pick === 'dark' || pick === 'light') return;
+							root.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+						});
+					} catch (e) {
+						/* 老浏览器不支持 addEventListener 就算了 */
+					}
 				}
 			})();
 		</script>

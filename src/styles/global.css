@@ -97,6 +97,53 @@
 }
 
 /* ------------------------------------------------------------
+   二·五、评论区（Waline）的配色对齐
+   ------------------------------------------------------------
+   Waline 自带一套 --waline-* 变量，默认主题色是绿的。
+   这里把它接到站点自己的配色上，以后改 --brand 评论区会一起变，
+   不用单独去调评论组件。
+
+   ⚠ 两个关键点，别改动这里的写法：
+
+   ① 变量写在 [data-waline] 上，而不是 :root 上。
+      Waline 的变量默认定义在 :root；切到暗色时它还会在运行时
+      往 <head> 里插一段 `html[data-theme="dark"]{--waline-bg-color:#1e1e1e…}`
+      （这段是写死在它 JS 里的，不是 CSS 类）。
+      但「元素自己的声明」永远优先于「从祖先继承来的值」——
+      所以只要把变量写在 Waline 的容器元素上，浅色深色都能压住，
+      完全不用去跟它的选择器比优先级。
+
+   ② Waline 在暗色下【不会】覆盖 --waline-theme-color，
+      所以主题色两套模式共用一个 --brand 就行
+      （--brand 本身已经会跟着主题变）。
+
+   `--waline-white`（按钮上的文字色）故意不设：
+   浅色下站点主色是深蓝、配默认的白色文字，深色下是亮蓝、配它自己的黑色文字，
+   两种情况的可读性都刚好合适。
+   ------------------------------------------------------------ */
+[data-waline] {
+	/* 主色：链接、按钮、选中态 */
+	--waline-theme-color: var(--brand);
+	--waline-active-color: var(--brand-hover);
+
+	/* 正文与底色 */
+	--waline-color: var(--text);
+	--waline-bg-color: var(--card);
+	--waline-bg-color-light: var(--bg-soft);
+	--waline-bg-color-hover: var(--bg-soft);
+
+	/* 边框与禁用态 */
+	--waline-border-color: var(--border);
+	--waline-disable-bg-color: var(--bg-soft);
+	--waline-disable-color: var(--text-faint);
+
+	/* 引用块与提示条 */
+	--waline-bq-color: var(--bg-soft);
+	--waline-info-bg-color: var(--bg-soft);
+	--waline-info-color: var(--text-faint);
+}
+
+/* ------------------------------------------------------------
    三、基础重置
    ------------------------------------------------------------ */
 *,

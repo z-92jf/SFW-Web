@@ -11,6 +11,7 @@
     "preview": "astro preview"
   },
   "dependencies": {
+    "@waline/client": "^3.16.0",
     "astro": "^7.3.5"
   },
   "allowScripts": {}
