@@ -17,9 +17,9 @@ const yearRange = now > footer.since ? `${footer.since}-${now}` : `${now}`;
 // 把联系方式的「用途 → 邮箱」整理成数组，空的自动过滤掉。
 // 这样你哪天删掉某一行邮箱，页面上也会跟着少一行，不留空标签
 const contactList = [
-	{ label: '想加入我们', mail: contact.join },
-	{ label: '想投诉', mail: contact.report },
-	{ label: '想发布评论', mail: contact.comment },
+	{ label: '加入我们', mail: contact.join },
+	{ label: '反馈与投诉', mail: contact.report },
+	{ label: '发布文章', mail: contact.comment },
 ].filter((c) => c.mail && c.mail.trim() !== '');
 ---
 
@@ -49,7 +49,6 @@ const contactList = [
 				<div class="footer-heading">相关链接</div>
 				<ul class="footer-list">
 					<li><a href={links.github} target="_blank" rel="noopener">GitHub 仓库</a></li>
-					<li><a href={links.releases} target="_blank" rel="noopener">GitHub Releases</a></li>
 				</ul>
 			</div>
 
