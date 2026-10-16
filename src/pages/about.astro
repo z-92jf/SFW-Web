@@ -38,8 +38,7 @@ import { site, links, contact, footer } from '../data/site';
 				<p>
 					项目从 {footer.since} 年开始持续维护，目前版本为
 					<span class="badge badge-brand">v{site.version}</span>。
-					我们更看重的是<b>稳定</b>和<b>一致</b>——
-					界面上写什么键，按下就该是什么效果；该保存的数据，换个方式打开也还在。
+					我们更看重的是<b>稳定性</b>和<b>一致性</b>
 				</p>
 			</div>
 
@@ -51,17 +50,17 @@ import { site, links, contact, footer } from '../data/site';
 				<h2>团队成员</h2>
 				<div class="member-list">
 					<div class="member">
-						<div class="member-avatar">张</div>
+						<div class="member-avatar">z</div>
 						<div>
-							<div class="member-name">张涵钦</div>
-							<div class="text-faint">z_92jf</div>
+							<div class="member-name">z_92jf</div>
+							<div class="text-faint">工作室组长</div>
 						</div>
 					</div>
 					<div class="member">
 						<div class="member-avatar">陈</div>
 						<div>
 							<div class="member-name">陈梓木</div>
-							<div class="text-faint">开发成员</div>
+							<div class="text-faint">测试人员</div>
 						</div>
 					</div>
 				</div>
@@ -76,7 +75,7 @@ import { site, links, contact, footer } from '../data/site';
 					{
 						contact.join && (
 							<li>
-								<span class="contact-label">想加入我们</span>
+								<span class="contact-label">加入我们：</span>
 								<a href={`mailto:${contact.join}`}>{contact.join}</a>
 							</li>
 						)
@@ -84,7 +83,7 @@ import { site, links, contact, footer } from '../data/site';
 					{
 						contact.report && (
 							<li>
-								<span class="contact-label">想投诉</span>
+								<span class="contact-label">反馈与投诉：</span>
 								<a href={`mailto:${contact.report}`}>{contact.report}</a>
 							</li>
 						)
@@ -92,7 +91,7 @@ import { site, links, contact, footer } from '../data/site';
 					{
 						contact.comment && (
 							<li>
-								<span class="contact-label">想发布评论</span>
+								<span class="contact-label">发布文章：</span>
 								<a href={`mailto:${contact.comment}`}>{contact.comment}</a>
 							</li>
 						)

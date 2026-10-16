@@ -102,7 +102,7 @@ const recentPosts = (
 	<section class="section">
 		<div class="container">
 			<h2 class="section-title">核心功能</h2>
-			<p class="section-subtitle">一个控制台，收拢日常用得上的几件事。</p>
+			<p class="section-subtitle">把日常琐碎功能融入一个软件，软件大小极致压缩</p>
 
 			<div class="grid">
 				{features.map((f) => <FeatureCard icon={f.icon} title={f.title} desc={f.desc} href={f.href} />)}
@@ -180,7 +180,7 @@ const recentPosts = (
 	<section class="section">
 		<div class="container">
 			<h2 class="section-title">最新更新</h2>
-			<p class="section-subtitle">每一次变动都记录在案。</p>
+			<p class="section-subtitle">Recently Updated</p>
 
 			<div class="post-list">
 				{
@@ -215,33 +215,24 @@ const recentPosts = (
 		<div class="container">
 			<h2 class="section-title">常见问题</h2>
 			<p class="section-subtitle">
-				更多问题可以查看<a href="/help">完整使用说明</a>。
+				更多问题请查看<a href="/help">完整使用说明</a>。
 			</p>
 
 			<div class="faq-list">
 				<details class="faq">
-					<summary>需要联网才能用吗？</summary>
-					<p>不需要。主要功能全部离线可用，只有下载和检查更新时才需要联网。</p>
-				</details>
-
-				<details class="faq">
-					<summary>账号数据存在哪里？</summary>
-					<p>
-						保存在程序所在目录，不会上传到任何服务器。
-						无论从哪个位置启动程序，读到的都是同一份数据。
-					</p>
+					<summary>此软件可以在离线时使用吗？</summary>
+					<p>完全可以。主要功能全部离线可用。</p>
 				</details>
 
 				<details class="faq">
 					<summary>为什么下载时杀毒软件会报警？</summary>
 					<p>
-						新发布的程序被误报比较常见，程序本身不含恶意代码。
-						可以先安装，再把安装目录加入杀毒软件的信任列表。
+						由于软件功能性质特殊，并且会进行敏感操作，很容易被杀毒软件误报。我们的软件是十分安全的，您可以放心使用并将软件加入杀毒软件白名单。
 					</p>
 				</details>
 
 				<details class="faq">
-					<summary>支持哪些 Windows 版本？</summary>
+					<summary>支持的 Windows 版本？</summary>
 					<p>Windows 10 及以上的 64 位系统，无需额外安装运行库。</p>
 				</details>
 			</div>
@@ -270,7 +261,7 @@ const recentPosts = (
 				<div class="start-step">
 					<div class="start-num">3</div>
 					<h3>使用</h3>
-					<p>打开程序，注册一个离线账号即可开始。</p>
+					<p>在“开始”找到SERVICES FOR Windows或双击桌面快捷方式</p>
 				</div>
 			</div>
 
