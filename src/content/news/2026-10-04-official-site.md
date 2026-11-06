@@ -5,7 +5,7 @@ author: "小D助手"
 category: "公告"
 tags: ["官网", "发布"]
 summary: "新官网 sfw.us.ci 正式上线。这里会同步发布开发进展、使用教程和版本通告。"
-pinned: true
+pinned: false
 ---
 
 SERVICES FOR Windows 的新官网今天正式上线了。
