@@ -26,14 +26,14 @@ export const site = {
 
 	// ★ 要改：当前最新版本号。下载页、更新日志页都会读这个值。
 	//   发新版本时记得同步改这里，同时去 src/content/changelog/ 加一篇日志
-	version: '1.1.1',
+	version: '1.1.2',
 
 	// 版本状态：'正式版' / '测试版' / '预览版'。显示在版本号旁边
 	versionStage: '正式版',
 
 	// 发布日期，格式 YYYY-MM-DD。
 	// 这里用的是 GitHub 上 release 的实际发布日期，保持一致
-	releaseDate: '2026-10-03',
+	releaseDate: '2026-11-06',
 
 	// ★ 要改：网站图标路径。文件放在 public/ 目录下，
 	//   路径写的时候不带 public，比如 public/favicon.svg 就写 /favicon.svg
@@ -65,7 +65,7 @@ export const links = {
 	//   ⚠ 但文件名是写死的：每次发版如果 exe 改了名字（比如带上新版本号），
 	//     这里必须跟着改，否则点击就是 404。
 	download:
-		'https://github.com/z-92jf/SERVICES-FOR-Windows/releases/latest/download/Setup-SERVICES-FOR-Windows-V1.1.1.exe',
+		'https://github.com/z-92jf/SERVICES-FOR-Windows/releases/latest/download/Setup.SERVICES.FOR.Windows.1.1.2.exe',
 
 	// Releases 列表页，让用户能看历史版本
 	releases: 'https://github.com/z-92jf/SERVICES-FOR-Windows/releases',
@@ -332,12 +332,29 @@ export function releaseDownloadUrl(tag: string, file: string): string {
 
 // ★ 要改：按「从新到旧」排列，最新的放最前面。
 //
-// ⚠ 文件名有个坑：你的 exe 命名规则换过 ——
-//   1.1.0 是 Setup.SERVICES.FOR.Windows.V1.1.0-Win64.exe（点分隔、带 Win64）
-//   1.1.1 是 Setup-SERVICES-FOR-Windows-V1.1.1.exe（横杠分隔、没有 Win64）
-//   必须照抄 GitHub 上的实际文件名，错一个字符点击就是 404。
+// ⚠ 文件名有个坑：exe 的命名规则每个版本都不一样 ——
+//   1.1.0  Setup.SERVICES.FOR.Windows.V1.1.0-Win64.exe（点分隔、带 V、带 Win64）
+//   1.1.1  Setup-SERVICES-FOR-Windows-V1.1.1.exe（横杠分隔、带 V、无 Win64）
+//   1.1.2  Setup.SERVICES.FOR.Windows.1.1.2.exe（点分隔、无 V、无 Win64）
+//   ⚠ tag 也不统一：1.1.1 是 "1.1.1"，1.1.2 是 "v1.1.2"（多了个 v）。
+//   必须照抄 GitHub 上的实际名字，错一个字符点击就是 404。
 //   建议以后固定一套命名规则，省得每次都要回去核对。
 export const releases: ReleaseItem[] = [
+	{
+		version: '1.1.2',
+		tag: 'v1.1.2',
+		date: '2026-11-06',
+		stage: '正式版',
+		note: '密码加密、账户管理三项、自动检查更新、主题设置',
+		assets: [
+			{
+				label: '安装版',
+				file: 'Setup.SERVICES.FOR.Windows.1.1.2.exe',
+				size: '5.4 MB',
+			},
+			{ label: '免安装包', file: '1.1.2.zip', size: '5.8 MB' },
+		],
+	},
 	{
 		version: '1.1.1',
 		tag: '1.1.1',
