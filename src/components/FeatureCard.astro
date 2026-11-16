@@ -38,6 +38,11 @@ const icons: Record<string, string> = {
 	// 设置：三条带滑块的调节杆
 	settings:
 		'<path d="M5 21v-7M5 10V3M12 21v-9M12 8V3M19 21v-5M19 12V3"/><path d="M2.5 14h5M9.5 8h5M16.5 16h5"/>',
+	// 时钟：表盘 + 时针分针（指针停在 12:20 附近，两根针长短分明）
+	clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>',
+	// 地球：外圆 + 左右两条经线弧 + 赤道
+	earth:
+		'<circle cx="12" cy="12" r="9"/><path d="M12 3a13 13 0 0 0 0 18 13 13 0 0 0 0-18"/><path d="M3 12h18"/>',
 };
 
 const svgContent = icons[icon] ?? icons.panel;

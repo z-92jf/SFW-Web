@@ -208,7 +208,13 @@ export const features: FeatureItem[] = [
 	{
 		icon: 'clock',
 		title: '时间工具',
-		desc: '提供时间校队、倒计时、秒表等功能，方便日常使用。',
+		desc: '提供时间校对、倒计时、时钟等功能，方便日常使用。',
+		href: null,
+	},
+	{
+		icon: 'earth',
+		title: '多语言支持',
+		desc: '程序内置两种语言支持，后续还会增加更多语种，方便不同地区用户使用。',
 		href: null,
 	},
 ];
