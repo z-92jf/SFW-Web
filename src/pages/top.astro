@@ -84,6 +84,10 @@ const recentPosts = (
 					<div class="stat-label">功能模块</div>
 				</div>
 				<div class="stat">
+					<div class="stat-num">2<span class="stat-unit">+</span></div>
+					<div class="stat-label">语言支持</div>
+				</div>
+				<div class="stat">
 					<div class="stat-num">离线</div>
 					<div class="stat-label">不联网也能用</div>
 				</div>
@@ -461,12 +465,21 @@ const recentPosts = (
 		border-bottom: 1px solid var(--border);
 	}
 
-	/* auto-fit + minmax：窄屏自动从一行 4 个变成 2 个，不用写媒体查询 */
+	/* 用 flex 而不是 grid：这一条有 5 项（奇数），换成 grid 的 auto-fit 后，
+	     中等宽度会出现「4+1」—— 最后一项孤零零贴在左边（实测 800px 时偏离中心 291px）。
+	     flex 的 justify-content: center 会让不满一行的末项自动居中，各宽度都不会失衡。 */
 	.stat-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
 		gap: 24px;
 		text-align: center;
+	}
+
+	.stat {
+		/* 140px 是换行阈值，240px 是上限（防止项数变少时被拉得又宽又空） */
+		flex: 1 1 140px;
+		max-width: 240px;
 	}
 
 	.stat-num {

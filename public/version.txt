@@ -1,5 +1,5 @@
-version=1.1.2
-date=2026-10-30
+version=1.1.3
+date=2026-11-16
 url=https://sfw.us.ci/download
-file=https://sfw.us.ci/dl/SERVICES.FOR.Windows.V1.1.3.exe
-notes=修复了已知问题，增加密码存储安全性能，完善账户管理功能。
+file=https://github.com/z-92jf/SERVICES-FOR-Windows/releases/latest/download/Setup.SERVICES.FOR.Windows.1.1.3.exe
+notes=修复了已知问题，新增时间工具、Base64编解码工具
