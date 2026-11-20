@@ -37,7 +37,7 @@ import { site, links } from '../data/site';
 				</p>
 
 				<div class="download-actions">
-					<a class="btn btn-primary btn-lg" href={links.download} target="_blank" rel="noopener">
+					<a class="btn btn-primary btn-lg" href={links.download} data-dl-version={site.version} target="_blank" rel="noopener">
 						立即下载
 					</a>
 					<!-- 站内页面，不要加 target="_blank"，否则会另开一个标签页 -->

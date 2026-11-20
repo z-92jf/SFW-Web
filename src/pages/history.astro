@@ -48,6 +48,7 @@ import { site, links, releases, releaseDownloadUrl } from '../data/site';
 										<a
 											class="btn btn-outline btn-sm"
 											href={releaseDownloadUrl(r.tag, a.file)}
+											data-dl-version={r.version}
 											target="_blank"
 											rel="noopener"
 											title={`下载 ${a.file}`}
