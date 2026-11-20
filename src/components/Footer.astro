@@ -7,7 +7,7 @@
 //    不用动这个文件。
 // ============================================================
 
-import { site, links, contact, footer, footerNav } from '../data/site';
+import { site, links, contact, footer, footerNav, downloadMirror } from '../data/site';
 
 // 自动算出年份区间，比如 2024–2026。
 // 如果今年和起始年份相同，就只显示一个年份，不会出现「2026-2026」
@@ -49,6 +49,23 @@ const contactList = [
 				<div class="footer-heading">相关链接</div>
 				<ul class="footer-list">
 					<li><a href={links.github} target="_blank" rel="noopener">GitHub 仓库</a></li>
+					{/* 第二条下载通道。地址读 site.ts 的 downloadMirror，
+					    清空那个变量这一项会自动消失，不会留一个死链 */}
+					{
+						downloadMirror.trim() !== '' && (
+							<li>
+								<a
+									class="footer-link-stacked"
+									href={downloadMirror}
+									target="_blank"
+									rel="noopener"
+								>
+									Cloudflare 全国分发下载
+									<span class="footer-link-note">（国内下载更快）</span>
+								</a>
+							</li>
+						)
+					}
 				</ul>
 			</div>
 
@@ -100,10 +117,14 @@ const contactList = [
 	/* 四列：简介 / 导航 / 相关链接 / 联系我们。
 	   第一列原来放的是大字 logo，现在 logo 挪到底部通栏了，
 	   所以第一列不再需要那么宽，把空间让给「导航」（它要排两列）。
-	   但第一列那句标语不能被挤到换行，所以仍给它 1.35fr。 */
+	   但第一列那句标语不能被挤到换行，所以仍给它 1.35fr。
+
+	   第三列给到 1.15fr（原来 0.95）：因为「Cloudflare 全国分发下载」
+	   这行主文案在 900px 左右需要约 165px 才放得下，
+	   给窄了会断成「…全国分 / 发下载」，中间孤零零两个字很难看。 */
 	.footer-grid {
 		display: grid;
-		grid-template-columns: 1.35fr 1.1fr 0.95fr 1.35fr;
+		grid-template-columns: 1.35fr 1.1fr 1.15fr 1.35fr;
 		gap: 32px;
 	}
 
@@ -215,6 +236,20 @@ const contactList = [
 		color: var(--text-muted);
 	}
 
+	/* 带补充说明的链接（现在只有「Cloudflare 全国分发下载」）。
+	   说明单独占一行、小一号、颜色淡一点。
+	   不这样拆的话，这一句 20 个字在窄列里会被断成三行，断点还落在括号中间。 */
+	.footer-link-stacked {
+		display: inline-block;
+	}
+
+	.footer-link-note {
+		display: block;
+		font-size: 0.82em;
+		color: var(--text-faint);
+		line-height: 1.4;
+	}
+
 	/* 「导航」那一列项目多，排成两列，免得拉成很长的一条。
 	   加这个类只会影响用到它的那个列表，其他地方照旧是单列。 */
 	.footer-list--cols {
@@ -244,8 +279,11 @@ const contactList = [
 		font-size: 0.85rem;
 	}
 
-	/* 窄屏：两列变一列 */
-	@media (max-width: 860px) {
+	/* 窄屏：由四列收成两列。
+	   断点原来是 860，因为第三列加了「Cloudflare 全国分发下载」这行较长的文案，
+	   860~950 这一段四列会把这一列压到 176px 左右，主文案被断成三行。
+	   提到 960 之后，这个区间直接走两列，链接保持一行。 */
+	@media (max-width: 960px) {
 		.footer-grid {
 			grid-template-columns: 1fr 1fr;
 		}
