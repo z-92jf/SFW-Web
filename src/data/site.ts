@@ -75,6 +75,20 @@ export const links = {
 };
 
 /* ------------------------------------------------------------
+   四·四、第三方下载镜像 + 文件校验值
+   ------------------------------------------------------------ */
+
+// 第三方托管下载站的域名（Cloudflare Pages，仓库是 SFW-Web-download）。
+//
+// 它的根目录里直接放着安装包和免安装包，所以直链就是「域名 + 文件名」，
+// 不需要任何路径前缀。这样下载弹窗可以按「用户点的是哪个按钮」自动拼出
+// 对应文件的镜像地址，不用再单独维护一张表。
+//
+// ⚠ 还没部署前先把这里留空字符串：弹窗里的 Cloudflare 通道会自动
+//   显示成「即将上线」且不可点，等部署好填上域名就能用。
+export const downloadMirror = 'https://dl.sfw.us.ci';
+
+/* ------------------------------------------------------------
    三、联系方式
    ------------------------------------------------------------ */
 export const contact = {
@@ -313,6 +327,16 @@ export interface ReleaseAsset {
 	file: string;
 	/** 显示给用户看的大小，写错不影响下载，但会影响观感 */
 	size: string;
+	/**
+	 * 这个文件的 MD5（32 位小写十六进制）。
+	 * 显示在下载弹窗底部的「文件MD5值」里，让用户核对文件有没有下坏。
+	 *
+	 * ⚠ 必须是这个文件真实的 MD5，算错了用户会以为文件损坏。
+	 *   算的办法（Windows 自带，不用装东西）：
+	 *     PowerShell: Get-FileHash .\文件名 -Algorithm MD5
+	 *   或者用软件自己的「5.MD5 校验工具」→ 1.计算文件 MD5。
+	 */
+	md5?: string;
 }
 
 export interface ReleaseItem {
@@ -365,9 +389,10 @@ export const releases: ReleaseItem[] = [
 			{
 				label: '安装版',
 				file: 'Setup.SERVICES.FOR.Windows.1.1.3.exe',
+				md5: '1e2fb65a0c95c4ab11d3779b5b03407f',
 				size: '6.07 MB',
 			},
-			{ label: '免安装包', file: 'SERVICES.FOR.Windows.1.1.3.zip', size: '6.6 MB' },
+			{ label: '免安装包', file: 'SERVICES.FOR.Windows.1.1.3.zip', size: '6.6 MB', md5: 'd532455414a789b43c3c698fc468c41a' },
 		],
 	},
 	{
@@ -380,9 +405,10 @@ export const releases: ReleaseItem[] = [
 			{
 				label: '安装版',
 				file: 'Setup.SERVICES.FOR.Windows.1.1.2.exe',
+				md5: '9878b2042ab44913edc362e2f830e05e',
 				size: '5.4 MB',
 			},
-			{ label: '免安装包', file: '1.1.2.zip', size: '5.8 MB' },
+			{ label: '免安装包', file: '1.1.2.zip', size: '5.8 MB', md5: '266259a8af92eb73a98e19670c5fc0ea' },
 		],
 	},
 	{
@@ -395,9 +421,10 @@ export const releases: ReleaseItem[] = [
 			{
 				label: '安装版',
 				file: 'Setup-SERVICES-FOR-Windows-V1.1.1.exe',
+				md5: 'eebc31e981bf0193258edfcfab3c0e92',
 				size: '5.7 MB',
 			},
-			{ label: '免安装包', file: '1.1.1.zip', size: '7.3 MB' },
+			{ label: '免安装包', file: '1.1.1.zip', size: '7.3 MB', md5: 'dba514a452cef1d1527442a52b9c2618' },
 		],
 	},
 	{
@@ -410,9 +437,10 @@ export const releases: ReleaseItem[] = [
 			{
 				label: '安装版',
 				file: 'Setup.SERVICES.FOR.Windows.V1.1.0-Win64.exe',
+				md5: 'fa3cedfb59cfb5aef44755df2233783b',
 				size: '7.4 MB',
 			},
-			{ label: '免安装包', file: '1.1.0-Win64.zip', size: '8.7 MB' },
+			{ label: '免安装包', file: '1.1.0-Win64.zip', size: '8.7 MB', md5: '27e93ab873f086b275107079096072b5' },
 		],
 	},
 	{
@@ -425,9 +453,10 @@ export const releases: ReleaseItem[] = [
 			{
 				label: '安装版',
 				file: 'Setup.SERVICES.FOR.Windows.V1.0.1.Beta.exe',
+				md5: '406b659a1f9979d2209f65d303778897',
 				size: '5.7 MB',
 			},
-			{ label: '免安装包', file: '1.0.1.Beta.zip', size: '6.7 MB' },
+			{ label: '免安装包', file: '1.0.1.Beta.zip', size: '6.7 MB', md5: '20c4d4c427f0f4926cabca445cfc529a' },
 		],
 	},
 	{
@@ -440,9 +469,10 @@ export const releases: ReleaseItem[] = [
 			{
 				label: '安装版',
 				file: 'Setup.SERVICES.FOR.Windows.V1.0.0.exe',
+				md5: '77036c8df1bb613fd1dbb3fb0ebec659',
 				size: '5.5 MB',
 			},
-			{ label: '免安装包', file: 'v1.0.0.zip', size: '7.2 MB' },
+			{ label: '免安装包', file: 'v1.0.0.zip', size: '7.2 MB', md5: '281d6d79db63a42bedc63446b393eed9' },
 		],
 	},
 ];

@@ -19,6 +19,7 @@ import { site } from '../data/site';
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
 import BrowserCheck from '../components/BrowserCheck.astro';
+import DownloadDialog from '../components/DownloadDialog.astro';
 import '../styles/global.css';
 
 interface Props {
@@ -145,10 +146,21 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
 		<BrowserCheck />
 
 		<!--
+			下载源选择弹窗（全站只渲染这一份）。
+			站点上任何带 data-dl-version 的按钮被点击时，它会拦下来弹窗，
+			而不是直接跳 GitHub —— 国内访问 GitHub 经常卡住。
+			★ 不想要弹窗：把这一行删掉，按钮就恢复成直接下载。
+		-->
+		<DownloadDialog />
+
+		<!--
 			下载计数上报。
-			为什么要放在这里：下载入口分散在导航栏、首页、下载页、历史页好几处，
-			统一在这里监听一次就够了。以后新增下载按钮，只要带上
-			data-dl-version="版本号"，就会自动计入统计，不用改这段脚本。
+			入口分散在导航栏、首页、下载页、历史页好几处，所以统一放在这里，
+			新增按钮只要带上 data-dl-version="版本号" 就能计入统计。
+
+			⚠ 现在不再在「点击按钮」时上报，而是把函数挂到 window 上，
+			   等用户在弹窗里真正选好通道、开始下载时才调用。
+			   原因：只打开弹窗又关掉的不该算一次下载，否则数字会虚高。
 
 			统计页面：https://times.sfw.us.ci
 			★ 不想统计：把这段整块删掉；或删掉按钮上的 data-dl-version 属性。
@@ -156,39 +168,27 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
 		<script>
 			const HIT_ENDPOINT = 'https://times.sfw.us.ci/api/hit';
 
-			document.addEventListener(
-				'click',
-				(event) => {
-					const target = event.target;
-					if (!(target instanceof Element)) return;
+			Reflect.set(window, '__sfwDlHit', (version: string) => {
+				if (!version) return;
 
-					const link = target.closest('a[data-dl-version]');
-					if (!link) return;
+				// 本地预览和预览服务器不计入，免得开发时的点击混进真实数据
+				if (/^(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])$/.test(location.hostname)) return;
 
-					const version = link.getAttribute('data-dl-version');
-					if (!version) return;
+				const body = JSON.stringify({ v: version });
 
-					// 本地预览和预览服务器不计入，免得开发时的点击混进真实数据
-					if (/^(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])$/.test(location.hostname)) return;
-
-					const body = JSON.stringify({ v: version });
-
-					// 统计是附加功能，出任何问题都不能影响下载，所以整段兜住
-					try {
-						if (typeof navigator.sendBeacon === 'function') {
-							// 用字符串（text/plain）发：跨域不会触发预检，也不需要等响应
-							navigator.sendBeacon(HIT_ENDPOINT, body);
-						} else {
-							// 老浏览器兜底：keepalive 保证页面跳走前请求还能发出去
-							fetch(HIT_ENDPOINT, { method: 'POST', body, keepalive: true, mode: 'no-cors' });
-						}
-					} catch (err) {
-						/* 忽略 */
+				// 统计是附加功能，出任何问题都不能影响下载，所以整段兜住
+				try {
+					if (typeof navigator.sendBeacon === 'function') {
+						// 用字符串（text/plain）发：跨域不会触发预检，也不需要等响应
+						navigator.sendBeacon(HIT_ENDPOINT, body);
+					} else {
+						// 老浏览器兜底：keepalive 保证页面跳走前请求还能发出去
+						fetch(HIT_ENDPOINT, { method: 'POST', body, keepalive: true, mode: 'no-cors' });
 					}
-				},
-				// capture 阶段先执行，避免被其他点击处理器提前阻止
-				{ capture: true }
-			);
+				} catch (err) {
+					/* 忽略 */
+				}
+			});
 		</script>
 	</body>
 </html>
