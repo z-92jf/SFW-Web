@@ -26,14 +26,14 @@ export const site = {
 
 	// ★ 要改：当前最新版本号。下载页、更新日志页都会读这个值。
 	//   发新版本时记得同步改这里，同时去 src/content/changelog/ 加一篇日志
-	version: '1.1.3',
+	version: '1.1.4',
 
 	// 版本状态：'正式版' / '测试版' / '预览版'。显示在版本号旁边
 	versionStage: '正式版',
 
 	// 发布日期，格式 YYYY-MM-DD。
 	// 这里用的是 GitHub 上 release 的实际发布日期，保持一致
-	releaseDate: '2026-11-16',
+	releaseDate: '2026-11-22',
 
 	// ★ 要改：网站图标路径。文件放在 public/ 目录下，
 	//   路径写的时候不带 public，比如 public/favicon.svg 就写 /favicon.svg
@@ -65,7 +65,7 @@ export const links = {
 	//   ⚠ 但文件名是写死的：每次发版如果 exe 改了名字（比如带上新版本号），
 	//     这里必须跟着改，否则点击就是 404。
 	download:
-		'https://github.com/z-92jf/SERVICES-FOR-Windows/releases/latest/download/Setup.SERVICES.FOR.Windows.1.1.3.exe',
+		'https://github.com/z-92jf/SERVICES-FOR-Windows/releases/latest/download/Setup.SERVICES.FOR.Windows.1.1.4.exe',
 
 	// Releases 列表页，让用户能看历史版本
 	releases: 'https://github.com/z-92jf/SERVICES-FOR-Windows/releases',
@@ -446,6 +446,22 @@ export function releaseDownloadUrl(tag: string, file: string): string {
 //   必须照抄 GitHub 上的实际名字，错一个字符点击就是 404。
 //   建议以后固定一套命名规则，省得每次都要回去核对。
 export const releases: ReleaseItem[] = [
+	{
+		version: '1.1.4',
+		tag: 'v1.1.4',
+		date: '2026-11-22',
+		note: '新增 MD5 校验、文本编码转换、单位换算、系统信息查询、正则测试五个工具；修复切窗口仍响应键盘、未登录用户名空白；运行库已内置',
+		stage: '正式版',
+		assets: [
+			{
+				label: '安装版',
+				file: 'Setup.SERVICES.FOR.Windows.1.1.4.exe',
+				md5: '9507d5a972abd07c26830408e286c416',
+				size: '6.45 MB',
+			},
+			{ label: '免安装包', file: 'SERVICES.FOR.Windows.1.1.4.zip', size: '7.11 MB', md5: '27556c75091163997ab56293a8bb33a7' },
+		],
+	},
 	{
 		version: '1.1.3',
 		tag: 'v1.1.3',

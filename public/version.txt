@@ -1,5 +1,5 @@
-version=1.1.3
-date=2026-11-16
+version=1.1.4
+date=2026-11-22
 url=https://sfw.us.ci/download
-file=https://github.com/z-92jf/SERVICES-FOR-Windows/releases/latest/download/Setup.SERVICES.FOR.Windows.1.1.3.exe
-notes=修复了已知问题，新增时间工具、Base64编解码工具
+file=https://github.com/z-92jf/SERVICES-FOR-Windows/releases/latest/download/Setup.SERVICES.FOR.Windows.1.1.4.exe
+notes=新增MD5校验、文本编码转换、单位换算、系统信息查询、正则测试五个工具，修复切窗口仍响应键盘
