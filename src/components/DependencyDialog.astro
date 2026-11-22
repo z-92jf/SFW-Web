@@ -1,0 +1,692 @@
+---
+// ============================================================
+// 系统依赖安装弹窗（只挂在下载页，不进 BaseLayout）
+// ============================================================
+//
+// 为什么要有这个弹窗：
+//   Win7 SP1 / 8.1 没有自带 Universal C Runtime，程序会报
+//   「计算机中丢失 api-ms-win-crt-runtime-l1-1-0.dll」。
+//   补丁包放在 Cloudflare 下载站，这里按系统分好组，点一下就能下。
+//
+// 怎么工作：
+//   1. 带 data-dep-open 的元素被点击时拦下（阻止默认跳转），弹出窗口
+//   2. 没开 JS 的话拦不住，按钮本身就是下载站的链接，照原样跳过去 —— 降级保留
+//   3. 所有下载按钮都指向 Cloudflare，没有 GitHub 通道：
+//      这些补丁微软官方直链经常变，自己镜像一份更省事
+//
+// ★ 要改的地方
+//   - 补丁清单、MD5：src/data/site.ts 的 runtimeDeps
+//   - 镜像域名：src/data/site.ts 的 downloadMirror
+// ============================================================
+
+import { downloadMirror, runtimeDeps } from '../data/site';
+
+// 去掉末尾斜杠，拼链接时不会出现双斜杠
+const mirror = downloadMirror.replace(/\/+$/, '');
+const mirrorReady = mirror !== '';
+
+/** 依赖包在下载站根目录，直链就是「域名 + 文件名」 */
+const fileUrl = (file: string) => `${mirror}/${encodeURIComponent(file)}`;
+---
+
+{/* 遮罩 + 窗口。data-* 不参与逻辑，脚本里全部服务端渲染，不需要传常量 */}
+<div class="dep-overlay" id="depOverlay" hidden>
+	<div
+		class="dep-dialog"
+		role="dialog"
+		aria-modal="true"
+		aria-labelledby="depTitle"
+		aria-describedby="depSub"
+	>
+		<button class="dep-close" id="depClose" type="button" aria-label="关闭">
+			<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+				<path d="M18 6 6 18M6 6l12 12"></path>
+			</svg>
+		</button>
+
+		<header class="dep-head">
+			<h2 class="dep-title" id="depTitle">Windows 7 / 8 依赖安装</h2>
+			<p class="dep-sub" id="depSub">
+				只有系统提示缺少 <code>api-ms-win-crt-*.dll</code> 时才需要装。
+				按你的系统选一组，装完重启电脑。
+			</p>
+		</header>
+
+		<div class="dep-groups">
+			{
+				runtimeDeps.map((group) => (
+					<section class="dep-group">
+						<div class="dep-group-head">
+							<svg
+								class="dep-group-icon"
+								width="17"
+								height="17"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="1.8"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true"
+							>
+								<rect x="3" y="4" width="18" height="13" rx="2" />
+								<path d="M8 21h8M12 17v4" />
+							</svg>
+							<h3 class="dep-group-name">{group.os}</h3>
+						</div>
+						<p class="dep-group-note">{group.note}</p>
+
+						<ul class="dep-list">
+							{group.files.map((f) => (
+								<li class="dep-item">
+									<div class="dep-item-main">
+										<div class="dep-item-top">
+											<span class="dep-item-label">{f.label}</span>
+											<span class:list={['dep-tag', f.required ? 'dep-tag-req' : 'dep-tag-opt']}>
+												{f.required ? '必装' : '可选'}
+											</span>
+										</div>
+										<span class="dep-item-desc">{f.desc}</span>
+									</div>
+
+									<a
+										class="dep-dl"
+										href={mirrorReady ? fileUrl(f.file) : '#'}
+										target="_blank"
+										rel="noopener"
+										aria-disabled={mirrorReady ? 'false' : 'true'}
+									>
+										<span class="dep-dl-text">Cloudflare 下载</span>
+										<span class="dep-dl-size">{f.size}</span>
+									</a>
+								</li>
+							))}
+						</ul>
+					</section>
+				))
+			}
+		</div>
+
+		<p class="dep-source">
+			补丁包统一放在 Cloudflare 全国分发站，国内下载更快，也不需要挂代理。
+		</p>
+
+		<!-- 校验值：默认收起，交互跟下载弹窗、/top 常见问题一致 -->
+		<details class="dep-md5" id="depMd5">
+			<summary>
+				<span>文件MD5值</span>
+				<svg class="dep-md5-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+					<path d="m6 9 6 6 6-6"></path>
+				</svg>
+			</summary>
+			<div class="dep-md5-body">
+				{
+					runtimeDeps.flatMap((group) =>
+						group.files.map((f) => (
+							<p class="dep-md5-row">
+								<span class="dep-md5-name">{f.file}</span>
+								<code>{f.md5}</code>
+							</p>
+						))
+					)
+				}
+				<p class="dep-md5-tip">
+					您可以自行在下载后核对文件MD5值以确保文件没有损坏。
+				</p>
+			</div>
+		</details>
+	</div>
+</div>
+
+<style>
+	/* ------------------------------------------------------------
+	   一、遮罩（配色与下载弹窗同一套莫兰迪蓝）
+	   ------------------------------------------------------------ */
+	.dep-overlay {
+		--dep-accent: #6d8ba3;
+		--dep-accent-strong: #4a6478;
+		--dep-accent-soft: #eef3f7;
+		--dep-accent-line: #cfdce6;
+
+		/* 徽标和下载按钮的实心底色单独一组变量：
+		   accent 在深色模式下会提亮，直接拿来当白字底色会看不清，
+		   所以这里给它配好前景色，避免深色下白字糊在浅蓝上 */
+		--dep-solid-bg: #4a6478;
+		--dep-solid-fg: #ffffff;
+		--dep-solid-bg-hover: #3b4f5e;
+
+		position: fixed;
+		inset: 0;
+		z-index: 200;
+		display: grid;
+		place-items: center;
+		padding: 24px;
+		background: rgba(40, 54, 66, 0.52);
+		backdrop-filter: blur(6px);
+		-webkit-backdrop-filter: blur(6px);
+		animation: depFade 0.16s ease;
+	}
+
+	/* 上面那句 display:grid 会盖掉浏览器给 [hidden] 的默认样式，这里压回去 */
+	.dep-overlay[hidden] {
+		display: none;
+	}
+
+	@keyframes depFade {
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
+	}
+
+	/* ------------------------------------------------------------
+	   二、窗口本体
+	   ------------------------------------------------------------ */
+	.dep-dialog {
+		position: relative;
+		width: min(720px, 100%);
+		box-sizing: border-box;
+		max-height: calc(100vh - 48px);
+		overflow-y: auto;
+		padding: 30px 32px 26px;
+		background: var(--card);
+		border: 1px solid var(--border);
+		border-radius: 20px;
+		box-shadow: 0 24px 64px rgba(32, 46, 58, 0.26);
+		animation: depRise 0.2s cubic-bezier(0.2, 0.8, 0.3, 1);
+	}
+
+	@keyframes depRise {
+		from {
+			opacity: 0;
+			transform: translateY(12px) scale(0.985);
+		}
+		to {
+			opacity: 1;
+			transform: none;
+		}
+	}
+
+	.dep-close {
+		position: absolute;
+		top: 16px;
+		right: 16px;
+		display: grid;
+		place-items: center;
+		width: 34px;
+		height: 34px;
+		padding: 0;
+		border: 0;
+		border-radius: 9px;
+		background: transparent;
+		color: var(--text-faint);
+		cursor: pointer;
+		transition: color 0.15s, background 0.15s;
+	}
+
+	.dep-close:hover {
+		color: var(--text);
+		background: var(--dep-accent-soft);
+	}
+
+	.dep-close:focus-visible {
+		outline: 2px solid var(--dep-accent);
+		outline-offset: 2px;
+	}
+
+	/* ------------------------------------------------------------
+	   三、标题
+	   ------------------------------------------------------------ */
+	.dep-head {
+		margin-bottom: 22px;
+		padding-right: 40px;
+	}
+
+	.dep-title {
+		margin: 0 0 6px;
+		font-size: 1.32rem;
+		font-weight: 600;
+		line-height: 1.35;
+		color: var(--text);
+		letter-spacing: 0.01em;
+	}
+
+	.dep-sub {
+		margin: 0;
+		font-size: 0.88rem;
+		line-height: 1.65;
+		color: var(--text-muted);
+	}
+
+	.dep-sub code {
+		padding: 1px 5px;
+		border-radius: 5px;
+		background: var(--dep-accent-soft);
+		border: 1px solid var(--dep-accent-line);
+		color: var(--dep-accent-strong);
+		font-family: var(--font-mono, ui-monospace, Consolas, monospace);
+		font-size: 0.82em;
+	}
+
+	/* ------------------------------------------------------------
+	   四、按系统分组的卡片
+	   ------------------------------------------------------------ */
+	.dep-groups {
+		display: grid;
+		gap: 14px;
+	}
+
+	.dep-group {
+		padding: 18px 18px 16px;
+		background: var(--dep-accent-soft);
+		border: 1px solid var(--dep-accent-line);
+		border-radius: 14px;
+	}
+
+	.dep-group-head {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+
+	.dep-group-icon {
+		flex-shrink: 0;
+		color: var(--dep-accent);
+	}
+
+	.dep-group-name {
+		margin: 0;
+		font-size: 1.02rem;
+		font-weight: 600;
+		color: var(--dep-accent-strong);
+		letter-spacing: 0.01em;
+	}
+
+	.dep-group-note {
+		margin: 6px 0 14px;
+		font-size: 0.84rem;
+		line-height: 1.6;
+		color: var(--text-muted);
+	}
+
+	.dep-list {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		display: grid;
+		gap: 10px;
+	}
+
+	/* 一行一个补丁：左边文字，右边下载按钮 */
+	.dep-item {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 16px;
+		padding: 12px 14px;
+		background: var(--card);
+		border: 1px solid var(--border);
+		border-radius: 11px;
+	}
+
+	.dep-item-main {
+		display: flex;
+		flex-direction: column;
+		gap: 3px;
+		min-width: 0;
+	}
+
+	.dep-item-top {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 7px;
+	}
+
+	.dep-item-label {
+		font-size: 0.92rem;
+		font-weight: 500;
+		color: var(--text);
+	}
+
+	.dep-tag {
+		padding: 1px 7px;
+		border-radius: 999px;
+		font-size: 0.7rem;
+		font-weight: 500;
+		line-height: 1.6;
+		white-space: nowrap;
+	}
+
+	.dep-tag-req {
+		background: var(--dep-solid-bg);
+		color: var(--dep-solid-fg);
+	}
+
+	.dep-tag-opt {
+		background: transparent;
+		border: 1px solid var(--dep-accent-line);
+		color: var(--text-faint);
+	}
+
+	.dep-item-desc {
+		font-size: 0.82rem;
+		line-height: 1.55;
+		color: var(--text-muted);
+	}
+
+	/* 下载按钮：只有 Cloudflare 一条路，所以直接给实心按钮，不再分通道 */
+	.dep-dl {
+		flex-shrink: 0;
+		display: inline-flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 1px;
+		padding: 9px 16px;
+		background: var(--dep-solid-bg);
+		border-radius: 9px;
+		color: var(--dep-solid-fg);
+		text-decoration: none;
+		transition: background 0.16s, transform 0.16s;
+	}
+
+	.dep-dl:hover {
+		background: var(--dep-solid-bg-hover);
+		transform: translateY(-1px);
+	}
+
+	.dep-dl:focus-visible {
+		outline: 2px solid var(--dep-solid-bg);
+		outline-offset: 2px;
+	}
+
+	.dep-dl-text {
+		font-size: 0.86rem;
+		font-weight: 500;
+		line-height: 1.4;
+	}
+
+	.dep-dl-size {
+		font-size: 0.72rem;
+		opacity: 0.82;
+		line-height: 1.4;
+	}
+
+	.dep-dl[aria-disabled='true'] {
+		opacity: 0.55;
+		cursor: not-allowed;
+		pointer-events: none;
+	}
+
+	.dep-source {
+		margin: 16px 0 0;
+		font-size: 0.82rem;
+		line-height: 1.65;
+		color: var(--text-faint);
+	}
+
+	/* ------------------------------------------------------------
+	   五、文件 MD5（可折叠）
+	   ------------------------------------------------------------ */
+	.dep-md5 {
+		margin-top: 16px;
+		background: transparent;
+		border: 1px solid var(--border);
+		border-radius: 12px;
+		transition: border-color 0.16s;
+	}
+
+	.dep-md5:hover {
+		border-color: var(--border-strong);
+	}
+
+	.dep-md5 summary {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+		padding: 13px 18px;
+		font-size: 0.9rem;
+		font-weight: 500;
+		color: var(--text-muted);
+		cursor: pointer;
+		list-style: none;
+	}
+
+	.dep-md5 summary::-webkit-details-marker {
+		display: none;
+	}
+
+	.dep-md5 summary:hover {
+		color: var(--text);
+	}
+
+	.dep-md5 summary:focus-visible {
+		outline: 2px solid var(--dep-accent);
+		outline-offset: -2px;
+		border-radius: 12px;
+	}
+
+	.dep-md5-arrow {
+		flex-shrink: 0;
+		color: var(--text-faint);
+		transition: transform 0.2s ease;
+	}
+
+	.dep-md5[open] .dep-md5-arrow {
+		transform: rotate(180deg);
+	}
+
+	.dep-md5-body {
+		padding: 2px 18px 16px;
+		border-top: 1px solid var(--border);
+	}
+
+	.dep-md5-row {
+		margin: 12px 0 0;
+		font-size: 0.84rem;
+		color: var(--text-muted);
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 5px 8px;
+	}
+
+	/* 文件名比版本号长得多，允许在任意位置断开，不要撑破弹窗 */
+	.dep-md5-name {
+		font-family: var(--font-mono, ui-monospace, Consolas, monospace);
+		font-size: 0.8rem;
+		color: var(--text);
+		word-break: break-all;
+	}
+
+	.dep-md5-row code {
+		display: inline-block;
+		padding: 3px 8px;
+		background: var(--dep-accent-soft);
+		border: 1px solid var(--dep-accent-line);
+		border-radius: 6px;
+		color: var(--dep-accent-strong);
+		font-family: var(--font-mono, ui-monospace, SFMono-Regular, Consolas, monospace);
+		font-size: 0.8rem;
+		letter-spacing: 0.02em;
+		word-break: break-all;
+		user-select: all;
+	}
+
+	.dep-md5-tip {
+		margin: 14px 0 0;
+		font-size: 0.8rem;
+		line-height: 1.65;
+		color: var(--text-faint);
+	}
+
+	/* ------------------------------------------------------------
+	   六、窄屏
+	   ------------------------------------------------------------ */
+	@media (max-width: 620px) {
+		.dep-overlay {
+			padding: 16px;
+			place-items: end center;
+		}
+
+		.dep-dialog {
+			width: 100%;
+			padding: 24px 20px 20px;
+			border-radius: 18px;
+		}
+
+		.dep-title {
+			font-size: 1.15rem;
+		}
+
+		.dep-group {
+			padding: 15px 14px 14px;
+		}
+
+		/* 窄屏把按钮放到文字下面：并排会被文件名挤成两行 */
+		.dep-item {
+			flex-direction: column;
+			align-items: stretch;
+			gap: 10px;
+		}
+
+		.dep-dl {
+			width: 100%;
+		}
+	}
+
+	/* ------------------------------------------------------------
+	   七、深色模式
+	   ------------------------------------------------------------ */
+	:global(:root[data-theme='dark']) .dep-overlay {
+		--dep-accent: #8fadc4;
+		--dep-accent-strong: #b4cbd9;
+		--dep-accent-soft: #262f37;
+		--dep-accent-line: #3a4854;
+
+		/* 深色下把实心底色提亮，前景换成深色，白字换成浅底会糊掉 */
+		--dep-solid-bg: #8fadc4;
+		--dep-solid-fg: #16202a;
+		--dep-solid-bg-hover: #a6c0d4;
+
+		background: rgba(10, 14, 18, 0.66);
+	}
+
+	@media (prefers-color-scheme: dark) {
+		:global(:root:not([data-theme='light'])) .dep-overlay {
+			--dep-accent: #8fadc4;
+			--dep-accent-strong: #b4cbd9;
+			--dep-accent-soft: #262f37;
+			--dep-accent-line: #3a4854;
+
+			--dep-solid-bg: #8fadc4;
+			--dep-solid-fg: #16202a;
+			--dep-solid-bg-hover: #a6c0d4;
+
+			background: rgba(10, 14, 18, 0.66);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.dep-overlay,
+		.dep-dialog {
+			animation: none;
+		}
+
+		.dep-dl,
+		.dep-md5-arrow {
+			transition: none;
+		}
+	}
+</style>
+
+<script>
+	// ============================================================
+	// 开关逻辑：内容全部服务端渲染，这里只管显示和隐藏
+	// ============================================================
+	const depOverlay = document.getElementById('depOverlay');
+
+	if (depOverlay) {
+		const depDialog = depOverlay.querySelector('.dep-dialog');
+		const depClose = document.getElementById('depClose');
+
+		let depTrigger: HTMLElement | null = null;
+
+		function depOpen(el: HTMLElement) {
+			depTrigger = el;
+			depOverlay!.hidden = false;
+			// 弹窗开着时别让底下的页面跟着滚
+			document.body.style.overflow = 'hidden';
+			depClose?.focus();
+		}
+
+		function depCloseFn() {
+			if (depOverlay!.hidden) return;
+
+			depOverlay!.hidden = true;
+			document.body.style.overflow = '';
+
+			// 折叠状态收回去，下次打开是同样的初始样子
+			const md5 = document.getElementById('depMd5');
+			if (md5 instanceof HTMLDetailsElement) md5.open = false;
+
+			depTrigger?.focus();
+		}
+
+		// 拦截所有带 data-dep-open 的入口（capture 阶段，比其它处理器早）
+		document.addEventListener(
+			'click',
+			(event) => {
+				const target = event.target;
+				if (!(target instanceof Element)) return;
+
+				const trigger = target.closest('[data-dep-open]');
+				if (!(trigger instanceof HTMLElement)) return;
+
+				event.preventDefault();
+				depOpen(trigger);
+			},
+			{ capture: true }
+		);
+
+		depClose?.addEventListener('click', depCloseFn);
+
+		depOverlay.addEventListener('click', (event) => {
+			// 只有点在遮罩本身才关
+			if (event.target === depOverlay) depCloseFn();
+		});
+
+		document.addEventListener('keydown', (event) => {
+			if (depOverlay.hidden) return;
+
+			if (event.key === 'Escape') {
+				depCloseFn();
+				return;
+			}
+
+			// 焦点别跑出弹窗
+			if (event.key === 'Tab' && depDialog) {
+				const focusable = Array.from(
+					depDialog.querySelectorAll<HTMLElement>(
+						'a[href], button, summary, [tabindex]:not([tabindex="-1"])'
+					)
+				).filter((el) => el.offsetParent !== null);
+
+				if (focusable.length === 0) return;
+				const first = focusable[0];
+				const last = focusable[focusable.length - 1];
+
+				if (!event.shiftKey && document.activeElement === last) {
+					event.preventDefault();
+					first.focus();
+				} else if (event.shiftKey && document.activeElement === first) {
+					event.preventDefault();
+					last.focus();
+				}
+			}
+		});
+	}
+</script>

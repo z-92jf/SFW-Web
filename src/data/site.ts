@@ -89,6 +89,73 @@ export const links = {
 export const downloadMirror = 'https://dl.sfw.us.ci';
 
 /* ------------------------------------------------------------
+   四·五、系统依赖补丁（Windows 7 / 8.1 专用）
+   ------------------------------------------------------------ */
+//
+// 程序用 UCRT 工具链编译。Windows 10 / 11 自带 Universal C Runtime，
+// Win7 SP1 / 8.1 没有，缺了会报「计算机中丢失 api-ms-win-crt-runtime-l1-1-0.dll」，
+// 所以要在这里单独提供补丁。
+//
+// 这些包和安装包放在同一个 Cloudflare 下载站根目录，直链同样是
+// 「域名 + 文件名」。没有 GitHub 通道：微软官方下载中心的直链经常变，
+// 自己镜像一份更稳，也省得用户去找。
+//
+// required: true = 必装；false = 必装的安装失败时再试。
+export interface DependencyFile {
+	label: string;
+	file: string;
+	size: string;
+	md5: string;
+	required: boolean;
+	desc: string;
+}
+
+export interface DependencyGroup {
+	os: string;
+	note: string;
+	files: DependencyFile[];
+}
+
+export const runtimeDeps: DependencyGroup[] = [
+	{
+		os: 'Windows 7 SP1',
+		note: '需要 64 位系统。先装必装的那个，装不上再试可选的，装完重启。',
+		files: [
+			{
+				label: 'Universal C Runtime（KB2999226）',
+				file: 'Windows6.1-KB2999226-x64.msu',
+				size: '0.99 MB',
+				md5: 'ad7f5c851f6387e424ab206effb21354',
+				required: true,
+				desc: '解决提示缺少 api-ms-win-crt-*.dll 的问题。',
+			},
+			{
+				label: 'Windows 7 更新（KB2533552）',
+				file: 'Windows6.1-KB2533552-x64.msu',
+				size: '9.23 MB',
+				md5: '5e36c18d1b78f2003146dcd9528f8885',
+				required: false,
+				desc: '上面那个装不上时再装这个，然后重新试一次。',
+			},
+		],
+	},
+	{
+		os: 'Windows 8.1',
+		note: '需要 64 位系统。装完重启。',
+		files: [
+			{
+				label: 'Universal C Runtime（KB2999226）',
+				file: 'Windows8.1-KB2999226-x64.msu',
+				size: '0.96 MB',
+				md5: 'd0728878f9c6799046b43aeece4f3aca',
+				required: true,
+				desc: '解决提示缺少 api-ms-win-crt-*.dll 的问题。',
+			},
+		],
+	},
+];
+
+/* ------------------------------------------------------------
    三、联系方式
    ------------------------------------------------------------ */
 export const contact = {
